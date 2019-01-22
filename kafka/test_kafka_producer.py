@@ -4,12 +4,15 @@ from tweepy import OAuthHandler
 from tweepy import Stream
 import config
 from kafka import SimpleProducer, KafkaClient
+from six.moves import configparser
 
-#Variables that contains the user credentials to access Twitter API 
-access_token = config.API_ACCESS_TOKEN
-access_token_secret = config.API_ACCESS_TOKEN_SECRET
-consumer_key = config.API_CONSUMER_KEY
-consumer_secret = config.API_CONSUMER_SECRET
+#Variables that contains the user credentials to access Twitter API
+config = configparser.ConfigParser()
+config.read('config.ini')
+access_token = config.get('auth', 'access_token')
+access_token_secret = config.get('auth', 'access_token_secret')
+consumer_key = config.get('auth', 'consumer_key')
+consumer_secret = config.get('auth', 'consumer_secret')
 
 class StdOutListener(StreamListener):
     def on_data(self, data):
