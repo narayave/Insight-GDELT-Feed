@@ -29,10 +29,12 @@ def put_item_in_db(data):
 
 def consumer():
 
+    print('In consumer method')
     # consume json messages
     consumer = KafkaConsumer("tweetdata", 
                         bootstrap_servers=['localhost:9092'],
                         value_deserializer=lambda m: json.loads(m.decode('ascii')))
+    print('I have a consumer client')
 
     for message in consumer:
         mess = message.value
@@ -46,4 +48,5 @@ def consumer():
 
 
 if __name__ == '__main__':
+    print('Going to call consumer method')
     consumer()
