@@ -4,6 +4,8 @@ from tweepy import OAuthHandler
 from tweepy import Stream
 from kafka import SimpleProducer, KafkaClient
 from six.moves import configparser
+from multiprocessing.pool import ThreadPool
+
 
 #Variables that contains the user credentials to access Twitter API
 config = configparser.ConfigParser()
@@ -25,6 +27,20 @@ class StdOutListener(StreamListener):
 #This is a basic listener that just prints received tweets to stdout.
 
 
+
+def start_streaming(stream, topics):
+
+    print 'I can start streaming'
+    topic_list= [['residents Maplewood'], ['united states Maplewood'], ['united states Maine'], ['nasa United States'], ['nasa United States'], ['united states Michigan'], ['senate Frankfurt'], [' Richmond'], [' Pulaski County'], [' Portland'], [' Minnesota'], [' Wisconsin'], ['criminal Maury County'], ['governor Marinette']]
+
+    pool = ThreadPool()
+    pool.map(map_func, [stream, topic_list])
+
+    def map_func(topics):
+        stream.filter(track=topics)
+
+
+
 if __name__ == '__main__':
 
     kafka = KafkaClient("localhost:9092")
@@ -36,5 +52,10 @@ if __name__ == '__main__':
     auth.set_access_token(access_token, access_token_secret)
     stream = Stream(auth, l)
 
-    #This line filter Twitter Streams to capture data by the keywords: 'python', 'javascript', 'ruby'
-    stream.filter(track=['trump', 'mueller', 'fbi'])
+    start_streaming()
+
+    print 'Done'
+
+
+    #This line filter Twitter Streams to capture data by the keywords:
+    # stream.filter(track=['trump', 'mueller', 'fbi'])
