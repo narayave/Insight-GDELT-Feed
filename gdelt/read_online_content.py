@@ -28,21 +28,59 @@ def get_filename(location):
     return target_file
 
 
+def write_to_db(line):
+    pass
+
+
 def read_s3_contents(target_file):
 
     twitter_topics = []
 
-    for line in smart_open('s3://gdelt-open-data/v2/events/'+target_file, 'rb'):
-        # print line.decode('utf8')
-        if 'United States' not in line:
-            # print line
-            continue
-        
-        line = line.replace("\t", ";").split(';')
-        # print line #[52]
-        topic1 = line[6].lower()
-        topic2 = line[52].split(",")[0]
-        twitter_topics.append(topic1 + " " + topic2)
+    primary_fields = ['GLOBALEVENTID', 'SQLDATE', 'MonthYear', 'Year', 'FractionDate', \
+                    'Actor1Code', 'Actor1Name', 'Actor1CountryCode', 'Actor1KnownGroupCode', \
+                    'Actor1EthnicCode', 'Actor1Religion1Code', 'Actor1Religion2Code', \
+                    'Actor1Type1Code', 'Actor1Type2Code','Actor1Type3Code','Actor2Code', \
+                    'Actor2Name', 'Actor2CountryCode', 'Actor2KnownGroupCode', 'Actor2EthnicCode', \
+                    'Actor2Religion1Code', 'Actor2Religion2Code', 'Actor2Type1Code', \
+                    'Actor2Type2Code', 'Actor2Type3Code', 'IsRootEvent', 'EventCode', 'EventBaseCode', \
+                    'EventRootCode', 'QuadClass', 'GoldsteinScale', 'NumMentions', 'NumSources', \
+                    'NumArticles', 'AvgTone', 'Actor1Geo_Type', 'Filler1', 'Filler2', 'Filler3', \
+                    'Actor1Geo_FullName', 'Actor1Geo_CountryCode', 'Actor1Geo_ADM1Code', \
+                    'Actor1Geo_Lat', 'Actor1Geo_Long', 'Actor1Geo_FeatureID', 'Actor2Geo_Type', \
+                    'Actor2Geo_FullName', 'Actor2Geo_CountryCode', 'Actor2Geo_ADM1Code', \
+                    'Actor2Geo_Lat', 'Actor2Geo_Long', 'Actor2Geo_FeatureID', 'ActionGeo_Type', \
+                    'ActionGeo_FullName', 'ActionGeo_CountryCode', 'ActionGeo_ADM1Code', \
+                    'ActionGeo_Lat', 'ActionGeo_Long', 'ActionGeo_FeatureID', 'DATEADDED', 'SOURCEURL']
+
+    # for line in smart_open('s3://gdelt-open-data/v2/events/'+target_file, 'rb'):
+    with open('s3://gdelt-open-data/v2/events/'+target_file) as csvfile:
+        reader = csv.reader(csvfile)
+        for line in reader:
+            # print line.decode('utf8')
+            if 'United States' not in line:
+                # print line
+                continue
+
+            line = line.replace("\t", ";").split(';')
+            # line = filter(None, line)
+            print line, type(line)
+            print 'Size of line - ', len(line), 'Size of fields - ', len(primary_fields)
+
+            # dict_line = {field: val for field, val in line if field in primary_fields}
+
+            dict_line = {}
+            for i in xrange(0, len(line)):
+                dict_line[primary_fields] = line[i]
+
+            print dict_line
+
+            write_to_db(line)
+
+
+            # print line #[52]
+            topic1 = line[6].lower()
+            topic2 = line[52].split(",")[0]
+            twitter_topics.append(topic1 + " " + topic2)
 
 
     print twitter_topics
