@@ -42,7 +42,7 @@ def read_s3_contents(target_file):
         # print line #[52]
         topic1 = line[6].lower()
         topic2 = line[52].split(",")[0]
-        twitter_topics.append([topic1 + " " + topic2])
+        twitter_topics.append(topic1 + " " + topic2)
 
 
     print twitter_topics

@@ -28,17 +28,19 @@ class StdOutListener(StreamListener):
 
 
 
-def start_streaming(stream, topics):
-
-    print 'I can start streaming'
-    topic_list= [['residents Maplewood'], ['united states Maplewood'], ['united states Maine'], ['nasa United States'], ['nasa United States'], ['united states Michigan'], ['senate Frankfurt'], [' Richmond'], [' Pulaski County'], [' Portland'], [' Minnesota'], [' Wisconsin'], ['criminal Maury County'], ['governor Marinette']]
-
-    pool = ThreadPool()
-    pool.map(map_func, [stream, topic_list])
+def start_streaming(stream):
 
     def map_func(topics):
         stream.filter(track=topics)
 
+
+    print 'I can start streaming'
+    #topic_list = [["residents Maplewood"], ["united states maplewood"]]
+    topic_list= ['residents Maplewood', 'united states Maplewood','united states Maine','nasa United States','nasa United States','united states Michigan','senate Frankfurt',' Richmond',' Pulaski County',' Portland',' Minnesota',' Wisconsin','criminal Maury County','governor Marinette']
+
+    #pool = ThreadPool()
+    #pool.map(map_func, topic_list)
+    stream.filter(track=topic_list)
 
 
 if __name__ == '__main__':
@@ -52,7 +54,7 @@ if __name__ == '__main__':
     auth.set_access_token(access_token, access_token_secret)
     stream = Stream(auth, l)
 
-    start_streaming()
+    start_streaming(stream)
 
     print 'Done'
 

@@ -7,7 +7,7 @@ import decimal
 
 #dynamodb = boto3.client('dynamodb')
 dynamodb = boto3.resource('dynamodb',region_name='us-east-1')
-table = dynamodb.Table("twitter_stream_test")
+table = dynamodb.Table("test_twitter_stream")
 
 def put_item_in_db(data):
 
