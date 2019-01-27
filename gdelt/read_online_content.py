@@ -1,7 +1,13 @@
+from smart_open import smart_open
 import urllib2
 import boto3
 import botocore
-from smart_open import smart_open
+import json
+
+
+table_name = "twitter_stream_test"
+dynamodb = boto3.client('dynamodb')
+
 
 def get_target_filename():
 
@@ -28,8 +34,36 @@ def get_filename(location):
     return target_file
 
 
-def write_to_db(line):
-    pass
+def write_to_db(dict_line):
+    
+	print('Got data - ', created_at)	
+
+	response = dynamodb.put_item(
+		TableName=table_name,
+		Item={
+			'item_type': 'Event-'+ dict_line['GLOBALEVENTID'],
+			'item_key': dict_line['GLOBALEVENTID'],
+			'SQLDATE': dict_line['SQLDATE'],
+            'ActionGeo_FullName': dict_line['ActionGeo_FullName'],
+            'Actor1': {
+                'Actor1Code': dict_line['Actor1Code'],
+                'Actor1Name': dict_line['Actor1Name'],
+                'Actor1Geo_FullName': dict_line['Actor1Geo_FullName'],
+                },
+            'Actor2': {
+                'Actor2Code': dict_line['Actor2Code'],
+                'Actor2Name': dict_line['Actor2Name'],
+                'Actor2Geo_FullName': dict_line['Actor2Geo_FullName'],
+                },
+            'AvgTone': dict_line['AvgTone'],
+            'DATEADDED': dict_line['DATEADDED'],
+            'SOURCEURL': dict_line['SOURCEURL']
+		}
+	)
+
+
+	print("PutItem succeeded:")
+	print(json.dumps(response, indent=4, cls=DecimalEncoder))
 
 
 def read_s3_contents(target_file):
@@ -52,35 +86,31 @@ def read_s3_contents(target_file):
                     'ActionGeo_FullName', 'ActionGeo_CountryCode', 'ActionGeo_ADM1Code', \
                     'ActionGeo_Lat', 'ActionGeo_Long', 'ActionGeo_FeatureID', 'DATEADDED', 'SOURCEURL']
 
-    # for line in smart_open('s3://gdelt-open-data/v2/events/'+target_file, 'rb'):
-    with open('s3://gdelt-open-data/v2/events/'+target_file) as csvfile:
-        reader = csv.reader(csvfile)
-        for line in reader:
-            # print line.decode('utf8')
-            if 'United States' not in line:
-                # print line
-                continue
+    for line in smart_open('s3://gdelt-open-data/v2/events/'+target_file, 'rb'):
+        # print line.decode('utf8')
+        if 'United States' not in line:
+            # print line
+            continue
 
-            line = line.replace("\t", ";").split(';')
-            # line = filter(None, line)
-            print line, type(line)
-            print 'Size of line - ', len(line), 'Size of fields - ', len(primary_fields)
+        line = line.replace("\t", ";").split(';')
+        # line = filter(None, line)
+        # print line, type(line)
+        print 'Size of line - ', len(line), 'Size of fields - ', len(primary_fields)
 
-            # dict_line = {field: val for field, val in line if field in primary_fields}
+        # dict_line = {field: val for field, val in line if field in primary_fields}
 
-            dict_line = {}
-            for i in xrange(0, len(line)):
-                dict_line[primary_fields] = line[i]
+        dict_line = {}
+        for i in xrange(0, len(line)):
+            dict_line[primary_fields[i]] = line[i]
 
-            print dict_line
+        # print dict_line
 
-            write_to_db(line)
+        write_to_db(dict_line)
 
-
-            # print line #[52]
-            topic1 = line[6].lower()
-            topic2 = line[52].split(",")[0]
-            twitter_topics.append(topic1 + " " + topic2)
+        # print line #[52]
+        topic1 = line[6].lower()
+        topic2 = line[52].split(",")[0]
+        twitter_topics.append(topic1 + " " + topic2)
 
 
     print twitter_topics
