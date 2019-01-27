@@ -3,7 +3,7 @@ import urllib2
 import boto3
 #import botocore
 import json
-
+from boto3.dynamodb.conditions import Key, Attr
 
 table_name = "gdelt-news-feed"
 dynamodb = boto3.resource('dynamodb')
@@ -90,6 +90,18 @@ def write_to_db(dict_line):
 	print(json.dumps(response, indent=4)) #, cls=DecimalEncoder))
 
 
+def get_events(key):
+	table = dynamodb.Table(table_name)
+
+	fe = Key('item').eq('Event-California')
+	response = table.scan(FilterExpression=fe)
+
+	#print response
+
+	for item in response['Items']:
+		print item
+
+
 def read_s3_contents(target_file):
 
     twitter_topics = []
@@ -149,4 +161,6 @@ if __name__ == '__main__':
     target_filename = get_filename(target_file)
 
     # read_s3_contents(target_filename.lower()) # TODO: FIX THIS
-    read_s3_contents("20190124233000.export.csv")
+    #read_s3_contents("20190124233000.export.csv")
+
+    get_events('Event-California')
