@@ -1,12 +1,12 @@
 from smart_open import smart_open
 import urllib2
 import boto3
-import botocore
+#import botocore
 import json
 
 
-table_name = "twitter_stream_test"
-dynamodb = boto3.client('dynamodb')
+table_name = "gdelt-news-feed"
+dynamodb = boto3.resource('dynamodb')
 
 
 def get_target_filename():
@@ -36,34 +36,58 @@ def get_filename(location):
 
 def write_to_db(dict_line):
     
-	print('Got data - ', created_at)	
+	print 'Dictionary line - ', str(dict_line)
 
-	response = dynamodb.put_item(
-		TableName=table_name,
-		Item={
-			'item_type': 'Event-'+ dict_line['GLOBALEVENTID'],
-			'item_key': dict_line['GLOBALEVENTID'],
-			'SQLDATE': dict_line['SQLDATE'],
-            'ActionGeo_FullName': dict_line['ActionGeo_FullName'],
-            'Actor1': {
-                'Actor1Code': dict_line['Actor1Code'],
-                'Actor1Name': dict_line['Actor1Name'],
-                'Actor1Geo_FullName': dict_line['Actor1Geo_FullName'],
-                },
-            'Actor2': {
-                'Actor2Code': dict_line['Actor2Code'],
-                'Actor2Name': dict_line['Actor2Name'],
-                'Actor2Geo_FullName': dict_line['Actor2Geo_FullName'],
-                },
-            'AvgTone': dict_line['AvgTone'],
-            'DATEADDED': dict_line['DATEADDED'],
-            'SOURCEURL': dict_line['SOURCEURL']
-		}
-	)
+	tmp_loc = dict_line['ActionGeo_Type'].split(', ')
+	
+	action_loc = tmp_loc[1] if len(tmp_loc) > 1 else tmp_loc[0]
+	#action_loc = ','.join(tmp_loc[:2])
+	print 'Action location state - ', action_loc
+
+	table = dynamodb.Table(table_name)	
+	item = {
+		'item': 'Event-'+ action_loc,
+		'item_key': str(dict_line['GLOBALEVENTID']),
+		'SOURCEURL': dict_line['SOURCEURL'],
+		'AvgTone': dict_line['AvgTone'],
+		'DATEADDED': dict_line['DATEADDED'],
+		#'Actor1': {
+			#'Actor1Code': dict_line['Actor1Code'],
+			#'Actor1Name': dict_line['Actor1Name'],
+			#'Actor1Geo_FullName': dict_line['Actor1Geo_FullName']
+		#	}
+		}	
+	print item
+
+	# response = dynamodb.put_item(TableName=table_name, Item=item)
+	response = table.put_item(Item=item)	
+
+	#response = dynamodb.put_item(
+		#TableName=table_name,
+	#	Item={
+	#		'item': 'Event-'+ action_loc, #dict_line['ActionGeo_Type'],
+	#		'item_key': str(dict_line['GLOBALEVENTID'])
+#			'SQLDATE': str(dict_line['SQLDATE']),
+#            'ActionGeo_FullName': str(dict_line['ActionGeo_FullName']),
+#            'Actor1': {
+#                'Actor1Code': str(dict_line['Actor1Code']),
+#                'Actor1Name': str(dict_line['Actor1Name']),
+#                'Actor1Geo_FullName': str(dict_line['Actor1Geo_FullName']),
+#                },
+#            'Actor2': {
+#                'Actor2Code': dict_line['Actor2Code'],
+#                'Actor2Name': dict_line['Actor2Name'],
+#                'Actor2Geo_FullName': dict_line['Actor2Geo_FullName'],
+#                },
+#           'AvgTone': dict_line['AvgTone'],
+#           'DATEADDED': dict_line['DATEADDED'],
+#            'SOURCEURL': dict_line['SOURCEURL']
+	#	}
+	#)
 
 
 	print("PutItem succeeded:")
-	print(json.dumps(response, indent=4, cls=DecimalEncoder))
+	print(json.dumps(response, indent=4)) #, cls=DecimalEncoder))
 
 
 def read_s3_contents(target_file):

@@ -12,7 +12,7 @@ from pyspark.sql.functions import col
 # from cassandra import ConsistencyLevel
 
 import gdelt_schema
-import config
+#import config
 
 
 
