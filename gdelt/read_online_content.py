@@ -47,12 +47,12 @@ def write_to_db(dict_line):
 	table = dynamodb.Table(table_name)	
 	item = {
 		'item': 'Event-'+ action_loc,
-		'item_key': str(dict_line['SQLDATE']),
+		'item_key': str(dict_line['GLOBALEVENTID']),
+        'date': dict_line['SQLDATE'],
         'Location': action_loc,
 		'SOURCEURL': dict_line['SOURCEURL'],
 		'AvgTone': dict_line['AvgTone'],
-		'DATEADDED': dict_line['DATEADDED'],
-        'GLOBALEVENTID': dict_line['GLOBALEVENTID']
+		'DATEADDED': dict_line['DATEADDED']
 
 		}	
 	print item
