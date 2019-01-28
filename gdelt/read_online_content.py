@@ -47,44 +47,18 @@ def write_to_db(dict_line):
 	table = dynamodb.Table(table_name)	
 	item = {
 		'item': 'Event-'+ action_loc,
-		'item_key': str(dict_line['GLOBALEVENTID']),
+		'item_key': str(dict_line['SQLDATE']),
+        'Location': action_loc,
 		'SOURCEURL': dict_line['SOURCEURL'],
 		'AvgTone': dict_line['AvgTone'],
 		'DATEADDED': dict_line['DATEADDED'],
-		#'Actor1': {
-			#'Actor1Code': dict_line['Actor1Code'],
-			#'Actor1Name': dict_line['Actor1Name'],
-			#'Actor1Geo_FullName': dict_line['Actor1Geo_FullName']
-		#	}
+        'GLOBALEVENTID': dict_line['GLOBALEVENTID']
+
 		}	
 	print item
 
 	# response = dynamodb.put_item(TableName=table_name, Item=item)
-	response = table.put_item(Item=item)	
-
-	#response = dynamodb.put_item(
-		#TableName=table_name,
-	#	Item={
-	#		'item': 'Event-'+ action_loc, #dict_line['ActionGeo_Type'],
-	#		'item_key': str(dict_line['GLOBALEVENTID'])
-#			'SQLDATE': str(dict_line['SQLDATE']),
-#            'ActionGeo_FullName': str(dict_line['ActionGeo_FullName']),
-#            'Actor1': {
-#                'Actor1Code': str(dict_line['Actor1Code']),
-#                'Actor1Name': str(dict_line['Actor1Name']),
-#                'Actor1Geo_FullName': str(dict_line['Actor1Geo_FullName']),
-#                },
-#            'Actor2': {
-#                'Actor2Code': dict_line['Actor2Code'],
-#                'Actor2Name': dict_line['Actor2Name'],
-#                'Actor2Geo_FullName': dict_line['Actor2Geo_FullName'],
-#                },
-#           'AvgTone': dict_line['AvgTone'],
-#           'DATEADDED': dict_line['DATEADDED'],
-#            'SOURCEURL': dict_line['SOURCEURL']
-	#	}
-	#)
-
+	response = table.put_item(Item=item)
 
 	print("PutItem succeeded:")
 	print(json.dumps(response, indent=4)) #, cls=DecimalEncoder))
@@ -93,7 +67,7 @@ def write_to_db(dict_line):
 def get_events(key):
 	table = dynamodb.Table(table_name)
 
-	fe = Key('item').eq('Event-California')
+	fe = Key('item').eq(key)
 	response = table.scan(FilterExpression=fe)
 
 	#print response
@@ -161,6 +135,6 @@ if __name__ == '__main__':
     target_filename = get_filename(target_file)
 
     # read_s3_contents(target_filename.lower()) # TODO: FIX THIS
-    #read_s3_contents("20190124233000.export.csv")
+    # read_s3_contents("20190124233000.export.csv")
 
-    get_events('Event-California')
+    get_events('Event-Illinois')
