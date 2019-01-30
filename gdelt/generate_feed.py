@@ -4,6 +4,7 @@ import boto3
 #import botocore
 import json
 from boto3.dynamodb.conditions import Key, Attr
+from pprint import pprint
 
 table_name = "gdelt-news-feed"
 dynamodb = boto3.resource('dynamodb')
@@ -119,6 +120,15 @@ def add_new_users(start, end):
     print 'Done adding new users'
 
 
+def generate_feed(username):
+    table = dynamodb.Table(table_name)
+
+    fe = Key('item').begins_with("Event-")
+    response = table.scan(FilterExpression=fe)
+    pprint(response)
+
+
+
 def get_events(key):
 	table = dynamodb.Table(table_name)
 
@@ -131,11 +141,15 @@ def get_events(key):
 		print item
 
 
+
+
+
 if __name__ == '__main__':
 
     print 'Going to generate feeds for users'
 
-
     # get_events('user-user1')
     # write_interests()
-    add_new_users(5,10)
+    # add_new_users(11,15)
+
+    generate_feed('user1')
