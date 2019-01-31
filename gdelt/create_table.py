@@ -157,7 +157,8 @@ def read_s3_contents(target_file, db_name, db_user, db_pass, db_host, db_port):
 
 def psqltest_query(tone_select, db_name, db_user, db_pass, db_host, db_port):
 
-	command = "SELECT * FROM gdelt_events WHERE gdelt_events.avg_tone < " + str(tone_select) + ";"
+	command = "SELECT * FROM gdelt_events WHERE gdelt_events.avg_tone < " + str(tone_select) + \
+			"ORDER BY gdelt_events.sqldate DESC;"
 
 	conn = None
 	try:
@@ -167,7 +168,7 @@ def psqltest_query(tone_select, db_name, db_user, db_pass, db_host, db_port):
 
 		cur.execute(command)
 		data = cur.fetchall()
-		print data
+		pprint(data)
 		cur.close()
 		conn.commit()
 		print 'I did something....?'
@@ -191,10 +192,10 @@ if __name__ == '__main__':
 	# target_file = get_target_filename()
 	# target_filename = get_filename(target_file)
 
-	create_gdelt_table(db_name, db_user, db_pass, db_host, db_port)
+	# create_gdelt_table(db_name, db_user, db_pass, db_host, db_port)
 
 	#read_s3_contents(target_filename.lower()) # TODO: FIX THIS
-	read_s3_contents("20190124233000.export.csv", db_name, db_user, db_pass, db_host, db_port)
+	# read_s3_contents("20190124233000.export.csv", db_name, db_user, db_pass, db_host, db_port)
 
 	tone_select = -4.0
 	psqltest_query(tone_select, db_name, db_user, db_pass, db_host, db_port)
