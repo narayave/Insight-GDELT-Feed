@@ -5,9 +5,9 @@ from smart_open import smart_open
 from pprint import pprint
 
 
-def write_to_db(record, db_name, db_user, db_pass):
+def write_to_db(record, db_name, db_user, db_pass, db_host, db_port):
 
-	pprint(record)
+	# pprint(record)
 
 	globaleventid = record['GLOBALEVENTID']
 	sqldate = record['SQLDATE']
@@ -25,12 +25,11 @@ def write_to_db(record, db_name, db_user, db_pass):
 	event_code = "'"+record['EventCode']+"'"
 	source_url = "'"+record['SOURCEURL']+"'"
 
-        example = "VALUES("+str(globaleventid)+","+str(sqldate)+","+actor1code+","+actor1name+","+ \
-            actor1geo_fullname+","+actor1countrycode+","+actor2code+","+actor2name+","+ \
-            actor2geo_fullname+","+actor2countrycode+","+str(goldstein_scale)+","+ \
-            str(avg_tone)+","+ str(num_mentions)+","+ str(event_code)+","+ str(source_url)
-	pprint(example)
-
+	example = "VALUES("+str(globaleventid)+","+str(sqldate)+","+actor1code+","+actor1name+","+ \
+		actor1geo_fullname+","+actor1countrycode+","+actor2code+","+actor2name+","+ \
+		actor2geo_fullname+","+actor2countrycode+","+str(goldstein_scale)+","+ \
+		str(avg_tone)+","+ str(num_mentions)+","+ str(event_code)+","+ str(source_url)
+	# pprint(example)
 
         command = [
             "INSERT INTO gdelt_events( \
@@ -47,7 +46,7 @@ def write_to_db(record, db_name, db_user, db_pass):
 	conn = None
 	try:
 		# connect to postgresql server
-		conn = psycopg2.connect("dbname="+db_name+" user="+db_user+" password="+db_pass)
+		conn = psycopg2.connect("dbname="+db_name+" host="+db_host+" port= "+db_port+" user="+db_user+" password="+db_pass)
 		cur = conn.cursor()
 
 		# create table
@@ -63,7 +62,7 @@ def write_to_db(record, db_name, db_user, db_pass):
 
 
 
-def create_gdelt_table(db_name, db_user, db_pass):
+def create_gdelt_table(db_name, db_user, db_pass, db_host, db_port):
 
 	command = [
 	"""CREATE TABLE gdelt_events (
@@ -82,12 +81,12 @@ def create_gdelt_table(db_name, db_user, db_pass):
 		num_mentions INTEGER,
 		event_code VARCHAR(10),
 		source_url VARCHAR(200)
-	)"""]
+	);"""]
 
 	conn = None
 	try:
 		# connect to postgresql server
-		conn = psycopg2.connect("dbname="+db_name+" user="+db_user+" password="+db_pass)
+		conn = psycopg2.connect("dbname="+db_name+" host="+db_host+" port= "+db_port+" user="+db_user+" password="+db_pass)
 		cur = conn.cursor()
 
 		# create table
@@ -126,7 +125,7 @@ def get_filename(location):
     return target_file
 
 
-def read_s3_contents(target_file, db_name, db_user, db_pass):
+def read_s3_contents(target_file, db_name, db_user, db_pass, db_host, db_port):
 
 	primary_fields = ['GLOBALEVENTID', 'SQLDATE', 'MonthYear', 'Year', 'FractionDate', \
                     'Actor1Code', 'Actor1Name', 'Actor1CountryCode', 'Actor1KnownGroupCode', \
@@ -150,9 +149,33 @@ def read_s3_contents(target_file, db_name, db_user, db_pass):
 		print 'Size of line - ', len(line), 'Size of fields - ', len(primary_fields)
 
 		dict_line = dict(zip(primary_fields, line))
-		write_to_db(dict_line, db_name, db_user, db_pass)
+		write_to_db(dict_line, db_name, db_user, db_pass, db_host, db_port)
+		break
 
 	print 'Read and dumped events to db'
+
+
+def psqltest_query(tone_select, db_name, db_user, db_pass, db_host, db_port):
+
+	command = "SELECT * FROM gdelt_events WHERE gdelt_events.avg_tone < " + str(tone_select) + ";"
+
+	conn = None
+	try:
+		# connect to postgresql server
+		conn = psycopg2.connect("dbname="+db_name+" host="+db_host+" port= "+db_port+" user="+db_user+" password="+db_pass)
+		cur = conn.cursor()
+
+		cur.execute(command)
+		data = cur.fetchall()
+		print data
+		cur.close()
+		conn.commit()
+		print 'I did something....?'
+	except(Exception, psycopg2.DatabaseError) as error:
+		print error
+	finally:
+		if conn is not None:
+			conn.close()
 
 
 if __name__ == '__main__':
@@ -162,14 +185,19 @@ if __name__ == '__main__':
 	db_name = config.get('dbauth', 'dbname')
 	db_user = config.get('dbauth', 'user')
 	db_pass = config.get('dbauth', 'password')
+	db_host = config.get('dbauth', 'host')
+	db_port = config.get('dbauth', 'port')
 
-	create_gdelt_table(db_name, db_user, db_pass)
+	# target_file = get_target_filename()
+	# target_filename = get_filename(target_file)
 
-	target_file = get_target_filename()
-	target_filename = get_filename(target_file)
+	create_gdelt_table(db_name, db_user, db_pass, db_host, db_port)
 
 	#read_s3_contents(target_filename.lower()) # TODO: FIX THIS
-	read_s3_contents("20190124233000.export.csv", db_name, db_user, db_pass)
+	read_s3_contents("20190124233000.export.csv", db_name, db_user, db_pass, db_host, db_port)
+
+	tone_select = -4.0
+	psqltest_query(tone_select, db_name, db_user, db_pass, db_host, db_port)
 
 	print 'Done'
 
