@@ -21,6 +21,7 @@ def index():
        title = 'Home', user = { 'nickname': 'Vee' },
        )
 
+
 @app.route('/db')
 def events_page():
     sql_query = """
@@ -33,3 +34,18 @@ def events_page():
         events += (query_results.iloc[i]['actor1geo_fullname'])
         events += "<br>"
     return events
+
+@app.route('/db_fancy')
+def events_page_fancy():
+    sql_query = """
+               SELECT * FROM gdelt_events;
+
+                """
+    query_results=pd.read_sql_query(sql_query,con)
+
+    items = []
+
+    for i in range(0,query_results.shape[0]):
+        items.append(dict(globaleventid=query_results.iloc[i]['globaleventid'], sqldate=query_results.iloc[i]['sqldate'], actor1geo_fullname=query_results.iloc[i]['actor1geo_fullname'], actor1name=query_results.iloc[i]['actor1name'])) #, source_url=query_results.iloc[i]['source_url']))
+#item['actor1geo_fullname']}}</td><td>{{item['actor1name']}}</td><td>{{item['source_url']}}
+    return render_template('test_page.html',items=items)
