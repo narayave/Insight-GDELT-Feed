@@ -6,7 +6,7 @@ import pandas as pd
 import psycopg2
 
 
-user = 'gres' #add your username here (same as previous postgreSQL)                      
+user = 'gres' #add your username here (same as previous postgreSQL)
 host = 'localhost'
 dbname = 'gdelt'
 
@@ -25,7 +25,7 @@ def index():
 @app.route('/db')
 def events_page():
     sql_query = """
-                SELECT * FROM gdelt_events;          
+                SELECT * FROM gdelt_events;
                 """
 
     query_results = pd.read_sql_query(sql_query,con)
@@ -49,3 +49,22 @@ def events_page_fancy():
         items.append(dict(globaleventid=query_results.iloc[i]['globaleventid'], sqldate=query_results.iloc[i]['sqldate'], actor1geo_fullname=query_results.iloc[i]['actor1geo_fullname'], actor1name=query_results.iloc[i]['actor1name'])) #, source_url=query_results.iloc[i]['source_url']))
 #item['actor1geo_fullname']}}</td><td>{{item['actor1name']}}</td><td>{{item['source_url']}}
     return render_template('test_page.html',items=items)
+
+@app.route('/output')
+def location_output():
+
+	#pull 'birth_month' from input field and store it
+	loc = request.args.get('location')
+
+	#just select the Cesareans  from the birth dtabase for the month that the user inputs
+	query = "SELECT globaleventid, sqldate, actor1name FROM gdelt_events WHERE actor1countrycode='%s'" % loc
+	print(query)
+
+	query_results=pd.read_sql_query(query,con)
+	print(query_results)
+	items = []
+	for i in range(0,query_results.shape[0]):
+		items.append(dict(eventid=query_results.iloc[i]['globaleventid'], date=query_results.iloc[i]['sqldate'], actor_name=query_results.iloc[i]['actor1name']))
+		the_result = ''
+
+	return render_template("output.html", items = items, the_result = the_result)
