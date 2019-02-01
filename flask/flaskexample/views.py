@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 import pandas as pd
 import psycopg2
+from flask import request
 
 
 user = 'gres' #add your username here (same as previous postgreSQL)
@@ -57,7 +58,7 @@ def location_output():
 	loc = request.args.get('location')
 
 	#just select the Cesareans  from the birth dtabase for the month that the user inputs
-	query = "SELECT globaleventid, sqldate, actor1name FROM gdelt_events WHERE actor1countrycode='%s'" % loc
+	query = "SELECT globaleventid, sqldate, actor1name FROM gdelt_events" # WHERE actor1countrycode='%s'" % loc
 	print(query)
 
 	query_results=pd.read_sql_query(query,con)
@@ -65,6 +66,7 @@ def location_output():
 	items = []
 	for i in range(0,query_results.shape[0]):
 		items.append(dict(eventid=query_results.iloc[i]['globaleventid'], date=query_results.iloc[i]['sqldate'], actor_name=query_results.iloc[i]['actor1name']))
-		the_result = ''
+	
+		#the_result = ''
 
-	return render_template("output.html", items = items, the_result = the_result)
+	return render_template("output.html", items = items) #, the_result = the_result)
