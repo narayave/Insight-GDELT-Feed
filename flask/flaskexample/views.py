@@ -58,7 +58,7 @@ def location_output():
 	loc = request.args.get('location')
 
 	#just select the Cesareans  from the birth dtabase for the month that the user inputs
-	query = "SELECT globaleventid, sqldate, actor1name FROM gdelt_events" # WHERE actor1countrycode='%s'" % loc
+	query = "SELECT globaleventid, sqldate, actor1name FROM gdelt_events WHERE actor1code='%s'" % loc
 	print(query)
 
 	query_results=pd.read_sql_query(query,con)
