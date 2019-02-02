@@ -70,34 +70,34 @@ class Database_Operations(object):
         pprint(results)
 
 
-    def create_tmp_events_table(self):
+    def create_events_table(self):
         command = [
-        """CREATE TABLE events_tmp (
+        """CREATE TABLE events (
                 globaleventid INTEGER PRIMARY KEY,
                 sqldate INTEGER,
                 monthyear INTEGER,
                 year INTEGER,
                 fractiondate NUMERIC,
-                actor1code VARCHAR(10),
+                actor1code VARCHAR(50),
                 actor1name VARCHAR(250),
-                actor1countrycode VARCHAR(10),
-                actor1knowngroupcode VARCHAR(10),
-                actor1ethniccode VARCHAR(10),
-                actor1religion1code VARCHAR(10),
-                actor1religion2code VARCHAR(10),
-                actor1type1code VARCHAR(10),
-                actor1type2code VARCHAR(10),
-                actor1type3code VARCHAR(10),
-                actor2code VARCHAR(10),
+                actor1countrycode VARCHAR(50),
+                actor1knowngroupcode VARCHAR(50),
+                actor1ethniccode VARCHAR(50),
+                actor1religion1code VARCHAR(50),
+                actor1religion2code VARCHAR(50),
+                actor1type1code VARCHAR(50),
+                actor1type2code VARCHAR(50),
+                actor1type3code VARCHAR(50),
+                actor2code VARCHAR(50),
                 actor2name VARCHAR(250),
-                actor2countrycode VARCHAR(10),
-                actor2knowngroupcode VARCHAR(10),
-                actor2ethniccode VARCHAR(10),
-                actor2religion1code VARCHAR(10),
-                actor2religion2code VARCHAR(10),
-                actor2type1code VARCHAR(10),
-                actor2type2code VARCHAR(10),
-                actor2type3code VARCHAR(10),
+                actor2countrycode VARCHAR(50),
+                actor2knowngroupcode VARCHAR(50),
+                actor2ethniccode VARCHAR(50),
+                actor2religion1code VARCHAR(50),
+                actor2religion2code VARCHAR(50),
+                actor2type1code VARCHAR(50),
+                actor2type2code VARCHAR(50),
+                actor2type3code VARCHAR(50),
                 isrootevent NUMERIC,
                 eventcode NUMERIC,
                 eventbasecode NUMERIC,
@@ -110,25 +110,25 @@ class Database_Operations(object):
                 avgtone NUMERIC,
                 actor1geo_type VARCHAR(250),
                 actor1geo_fullname VARCHAR(250),
-                actor1geo_countrycode VARCHAR(10),
-                actor1geo_adm1code VARCHAR(10),
-                gap_1 VARCHAR(10),
+                actor1geo_countrycode VARCHAR(50),
+                actor1geo_adm1code VARCHAR(50),
+                gap_1 VARCHAR(50),
                 actor1geo_lat NUMERIC,
                 actor1geo_long NUMERIC,
                 actor1geo_featureid VARCHAR(250),
                 actor2geo_type VARCHAR(250),
                 actor2geo_fullname VARCHAR(250),
-                actor2geo_countrycode VARCHAR(10),
-                gap_2 VARCHAR(10),
-                actor2geo_adm1code VARCHAR(10),
+                actor2geo_countrycode VARCHAR(50),
+                gap_2 VARCHAR(50),
+                actor2geo_adm1code VARCHAR(50),
                 actor2geo_lat VARCHAR(250),
                 actor2geo_long VARCHAR(250),
                 actor2geo_featureid VARCHAR(250),
                 actiongeo_type VARCHAR(250),
                 actiongeo_fullname VARCHAR(250),
-                actiongeo_countrycode VARCHAR(10),
-                actiongeo_adm1code VARCHAR(10),
-                gap_3 VARCHAR(10),
+                actiongeo_countrycode VARCHAR(50),
+                actiongeo_adm1code VARCHAR(50),
+                gap_3 VARCHAR(50),
                 actiongeo_lat VARCHAR(250),
                 actiongeo_long VARCHAR(250),
                 actiongeo_featureid VARCHAR(15),
@@ -237,7 +237,7 @@ class Data_Gatherer(object):
 
     def load_gdelt_csv(self, data_ops_handler, target=None):
 
-        command = [ "COPY events_tmp FROM 'events.csv' delimiter '\t' csv;" ]
+        command = [ "COPY events FROM '/home/ubuntu/Insight-GDELT-Feed/gdelt/events.csv' delimiter '\t' csv;" ]
 
         results = data_ops_handler.db_command(command)
         print results
@@ -256,21 +256,24 @@ class Data_Gatherer(object):
                         actor1geo_fullname, actor1geo_countrycode, actor2code,
                         actor2name, actor2geo_fullname, actor2geo_countrycode,
                         goldsteinscale, avgtone, nummentions, eventcode, sourceurl
-                    FROM events_tmp
+                    FROM events
             """]
 
         results = data_ops_handler.db_command(command)
         print results
 
 
-def example_psql_query(db_ops, ton_select):
+def example_psql_query(db_ops, tone_select):
 
-    command = ["SELECT * FROM gdelt_events WHERE gdelt_events.avg_tone < " + \
-                str(tone_select) + "ORDER BY gdelt_events.sqldate DESC;"]
+    command = ["SELECT * FROM events WHERE events.avgtone < " + \
+                str(tone_select) + " ORDER BY events.sqldate DESC;"]
+		#"""
+		#SELECT * FROM events ORDER by events.sqldate DESC;
+		#"""]
 
     results = db_ops.db_command(command)
     pprint(results)
-
+    print 'Length of results - ' + str(results)
 
 
 if __name__ == '__main__':
@@ -282,15 +285,15 @@ if __name__ == '__main__':
     data_gather.set_target_file()
 
     # db_ops.create_gdelt_table()
-    db_ops.create_tmp_events_table()
+    #db_ops.create_events_table()
     # data_gather.read_s3_file_contents(db_ops, "20190124233000.export.csv")
 
     # data_gather.read_s3_file_contents(db_ops)
 
-    data_gather.load_gdelt_csv(db_ops)
-    data_gather.transfer_data(db_ops)
+    #data_gather.load_gdelt_csv(db_ops)
+    #data_gather.transfer_data(db_ops)
 
-    # tone_select = -15.0
-    # example_psql_query(db_ops, tone_select)
+    tone_select = -5.0
+    example_psql_query(db_ops, tone_select)
 
     print 'Done'
