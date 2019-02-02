@@ -3,6 +3,30 @@
 		<title>{{title}} - GDELT</title>
  	</head>
 	<body>
-		<h1>Hello, {{user.nickname}}!</h1>
- 	</body>
+
+		<div class="container">
+			<div class="starter-template">
+				<h2>Input Page</h2>
+				<p>Enter some user input</p>
+			</div>
+
+			<div class = "container">
+			  <form  action="/output" method="GET">
+
+				<div class="form-group">
+				  <label for="location">Location:</label>
+				  <input type="text" id="location" name='location' placeholder="Country">
+				</div>
+
+				<div>
+				  <button type="submit" class="btn btn-default btn-lg">Submit</button>
+				</div>
+
+			  </form>
+			</div>
+			<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+			<script src="../static/js/bootstrap.min.js"></script>
+		  </div> <!-- /.container-->
+
+	</body>
 </html>

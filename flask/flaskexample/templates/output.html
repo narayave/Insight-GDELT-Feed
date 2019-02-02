@@ -1,0 +1,59 @@
+<html>
+	<head>
+		<title>{{title}} - GDELT</title>
+ 	</head>
+	<body>
+
+		<div class="container">
+			<div class="starter-template">
+				<h2>Input Page</h2>
+				<p>Enter some user input</p>
+			</div>
+
+			<div class = "container">
+				<form  action="/output" method="GET">
+
+				<div class="form-group">
+					<label for="location">Location:</label>
+					<input type="text" id="location" name='location' placeholder="Country">
+				</div>
+
+				<div>
+					<button type="submit" class="btn btn-default btn-lg">Submit</button>
+				</div>
+
+			  </form>
+			</div>
+			<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+			<script src="../static/js/bootstrap.min.js"></script>
+		</div> <!-- /.container-->
+
+
+		<div class="container">
+			<div class="starter-template">
+				<h3>Results:</h3>
+				<p class="lead">Below is the result of your query.<br> You just took user input and looked up the information. Now we need to expand the functionality!</p>
+		  	</div>
+
+			<table class="table table-hover">
+		 	<tr><th>Event ID</th><th>Date</th><th>Actor Name</th></tr>
+
+		  	{% for item in items %}
+		  	<tr><td>{{ item['eventid'] }}</td><td>{{ item['date']}}</td><td> {{ item['actor_name'] }}</td></tr>
+		  	{% endfor %}
+		  	</table>
+		 </div><!-- /.container -->
+
+<!--
+		<div class="container">
+			<div class="starter-template">
+				<h3>Another Result:</h3>
+				<p class="lead">Now we've taken the input and called a function from your package.<br>The result is {{the_result}}</p>
+		  	</div>
+
+		  	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+		  	<script src="static/js/bootstrap.min.js"></script>
+		</div><!-- /.container -->
+		
+	</body>
+</html>
