@@ -22,7 +22,7 @@ if __name__ == "__main__":
 	.getOrCreate()
 
     sqlcontext = SQLContext(sc)
-    gdelt_bucket = "s3n://gdelt-open-data/v2/events/20180410190000.export.csv" #201901*.export.csv" #	20180410190000.export.csv"
+    gdelt_bucket = "s3n://gdelt-open-data/v2/events/20180410190000.export.csv"
 
     df = sqlcontext.read \
     	.format('com.databricks.spark.csv') \
@@ -41,8 +41,15 @@ if __name__ == "__main__":
 
     df_news = df_clean.select('GLOBALEVENTID','SQLDATE','Actor1Name', 'SOURCEURL')
 
-    df_news.repartition(1000, 'GLOBALEVENTID')
+    #df_news.repartition(1000, 'GLOBALEVENTID')
     print 'I did stuff'
 
-    df_news.show(df_news.count())
+    df_news = df_news.rdd.map(lambda line: (line[1], 1)).reduceByKey(lambda a, b: a + b)
+
+    res = df_news.collect()
+
+    for val in res:
+	print val
+
+    #df_news.show(df_news.count())
 
