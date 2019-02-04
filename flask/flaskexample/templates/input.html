@@ -15,14 +15,14 @@
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-    <link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+    <link href="../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="starter-template.css" rel="stylesheet">
 
     <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
     <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
-    <script src="../../assets/js/ie-emulation-modes-warning.js"></script>
+    <script src="../assets/js/ie-emulation-modes-warning.js"></script>
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -60,24 +60,30 @@
 
       <div class="starter-template">
         <h1>Bootstrap starter template</h1>
-        <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
+        <p class="lead">Use this document as a way to quickly start any new project.<br>
+          All you get is this text and a mostly barebones HTML document.</p>
       </div>
 
-  <table class="table table-hover">
-    <tr><th>Event ID</th><th>Date</th><th>Actor Name</th><th>Source URL</th></tr>
+      <div class = "container">
+            <form  action="/output" method="GET">
 
-     {% for item in items %}
-     <tr>
-        <td>{{ item['eventid'] }}</td>
-        <td>{{ item['date']}}</td>
-        <td>{{item['actor_name'] }}</td>
-        <td>{{item['sourceurl'] }}</td>
-      </tr>
-     {% endfor %}
-     </table>
+              <div class="form-group">
+                <label for="location">Location:</label>
+                <input type="text" id="location" name='location' placeholder="Country">
+              </div>
 
-	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-	<script src="static/js/bootstrap.min.js"></script>
+              <div>
+                <button type="submit" class="btn btn-default btn-lg">Submit</button>
+              </div>
+
+            </form>
+          </div>
+          <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+          <script src="../static/js/bootstrap.min.js"></script>
+        </div> <!-- /.container-->
+
+  <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="../static/js/bootstrap.min.js"></script>
     </div><!-- /.container -->
 
 
