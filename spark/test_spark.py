@@ -35,15 +35,22 @@ if __name__ == "__main__":
     df_clean = sqlcontext.sql("""SELECT GLOBALEVENTID,
                               CAST(SQLDATE AS INTEGER),
                               Actor1Name,
-                              SOURCEURL
+			      Actor1Geo_CountryCode,
+			      Actor2Name,
+			      Actor2Geo_CountryCode,
+                              CAST(GoldsteinScale AS NUMERIC),
+			      CAST(AvgTone as NUMERIC),
+			      SOURCEURL
                             from temp
                             """)
 
-    df_news = df_clean.select('GLOBALEVENTID','SQLDATE','Actor1Name', 'SOURCEURL')
+    df_news = df_clean.select('GLOBALEVENTID','SQLDATE','Actor1Geo_CountryCode', 'Actor2Geo_CountryCode', 'GoldsteinScale', 'AvgTone')
 
     #df_news.repartition(1000, 'GLOBALEVENTID')
     print 'I did stuff'
 
+    # Dataframe object does not have the map attribute, which is why rdd needs to be
+    # 	called firstd..reduceByKey(lambda a, b: a + b)
     df_news = df_news.rdd.map(lambda line: (line[1], 1)).reduceByKey(lambda a, b: a + b)
 
     res = df_news.collect()
