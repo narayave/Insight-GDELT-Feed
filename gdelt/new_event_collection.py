@@ -9,6 +9,9 @@ import boto3
 import botocore
 import os
 
+from urllib import urlopen
+from zipfile import ZipFile
+import urllib
 
 class Database_Operations(object):
 
@@ -165,26 +168,49 @@ class Data_Gatherer(object):
             'ActionGeo_Type', 'ActionGeo_FullName', 'ActionGeo_CountryCode', \
             'ActionGeo_ADM1Code', 'gap_3', 'ActionGeo_Lat', 'ActionGeo_Long', \
             'ActionGeo_FeatureID', 'DATEADDED', 'SOURCEURL']
-
+	self.target_file_url = None
 
     def set_target_file(self):
 
         target_file_link = None
 
-        data = urllib2.urlopen(self.target_url)
+        data = urlopen(self.target_url)
         for line in data:
             target_file_link = line
             break
 
         # file size, hash, link to zip
         target_link = target_file_link.split(" ")[2]
+	self.target_file_url = target_link
 
         target_file = target_link.split("/")[-1]
         target_filename = target_file.replace(".zip\n", "")
         print 'Target file - ' + target_file
+	print 'Taregt file URL - ' + target_link
 
         self.target_file = target_filename
 
+
+    def download_zip(self):
+	print 'Going to download latest GDELT update file'
+	#urllib.request.urlretrieve(self.target_file_url, "/home/ubuntu/Insight-GDELT-Feed/gdelt/")
+        urllib.urlretrieve(self.target_file_url, "/home/ubuntu/Insight-GDELT-Feed/gdelt/"+self.target_file+".zip")
+
+
+    def unzip_download(self):
+	filename = self.target_file+'.zip'
+
+        with ZipFile(filename, 'r') as zip:
+            # extracting all the files
+            print('Extracting all the files now...')
+            zip.extractall()
+            print('Done!')
+
+    def delete_recent_files(self):
+        print 'Going to remove some files'
+        os.remove(self.target_file)
+        os.remove(self.target_file+".zip")
+        print 'Removed those recent files'
 
     def generate_sql_command(self, record):
 
@@ -283,6 +309,10 @@ if __name__ == '__main__':
     data_gather = Data_Gatherer()
 
     data_gather.set_target_file()
+    data_gather.download_zip()
+    data_gather.unzip_download()
+    data_gather.delete_recent_files()
+
 
     # db_ops.create_gdelt_table()
     #db_ops.create_events_table()
@@ -293,7 +323,7 @@ if __name__ == '__main__':
     #data_gather.load_gdelt_csv(db_ops)
     #data_gather.transfer_data(db_ops)
 
-    tone_select = -5.0
-    example_psql_query(db_ops, tone_select)
+    #tone_select = -5.0
+    #example_psql_query(db_ops, tone_select)
 
     print 'Done'
