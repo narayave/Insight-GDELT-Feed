@@ -263,7 +263,8 @@ class Data_Gatherer(object):
 
     def load_gdelt_csv(self, data_ops_handler, target=None):
 
-        command = [ "COPY events FROM '/home/ubuntu/Insight-GDELT-Feed/gdelt/events.csv' delimiter '\t' csv;" ]
+        command = [ "COPY events FROM '/home/ubuntu/Insight-GDELT-Feed/gdelt/" + self.target_file + "' delimiter '\t' csv;" ]
+        print command
 
         results = data_ops_handler.db_command(command)
         print results
@@ -289,17 +290,17 @@ class Data_Gatherer(object):
         print results
 
 
-def example_psql_query(db_ops, tone_select):
+def example_psql_query(db_ops, date): #tone_select):
 
-    command = ["SELECT * FROM events WHERE events.avgtone < " + \
-                str(tone_select) + " ORDER BY events.sqldate DESC;"]
+    command = ["SELECT * FROM events WHERE events.sqldate >= " + \
+                str(date) + " ORDER BY events.sqldate DESC;"]
 		#"""
 		#SELECT * FROM events ORDER by events.sqldate DESC;
 		#"""]
 
     results = db_ops.db_command(command)
     pprint(results)
-    print 'Length of results - ' + str(results)
+    print 'Length of results - ' + str(len(results[0]))
 
 
 if __name__ == '__main__':
@@ -311,19 +312,20 @@ if __name__ == '__main__':
     data_gather.set_target_file()
     data_gather.download_zip()
     data_gather.unzip_download()
-    data_gather.delete_recent_files()
-
 
     # db_ops.create_gdelt_table()
-    #db_ops.create_events_table()
+    db_ops.create_events_table()
     # data_gather.read_s3_file_contents(db_ops, "20190124233000.export.csv")
 
     # data_gather.read_s3_file_contents(db_ops)
 
-    #data_gather.load_gdelt_csv(db_ops)
+    data_gather.load_gdelt_csv(db_ops)
     #data_gather.transfer_data(db_ops)
 
-    #tone_select = -5.0
-    #example_psql_query(db_ops, tone_select)
+    data_gather.delete_recent_files()
+
+    tone_select = -50.0
+    date = 20190204
+    example_psql_query(db_ops, date)
 
     print 'Done'
