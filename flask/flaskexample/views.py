@@ -8,17 +8,17 @@ from flask import request
 
 
 user = 'gres' #add your username here (same as previous postgreSQL)
-host = 'localhost'
+host = 'ec2-18-235-99-234.compute-1.amazonaws.com'
 dbname = 'gdelt'
 
 db = create_engine('postgres://%s%s/%s'%(user,host,dbname))
 con = None
-con = psycopg2.connect(database = dbname, user = user)
+con = psycopg2.connect(database = dbname, host = host, user = user, password = 'password')
 
 @app.route('/')
 @app.route('/index')
 def index():
-    return render_template("index.html",
+    return render_template("input.html", #"index.html",
        title = 'Home', user = { 'nickname': 'Vee' },
        )
 
@@ -36,6 +36,7 @@ def events_page():
         events += "<br>"
     return events
 
+
 @app.route('/db_fancy')
 def events_page_fancy():
     sql_query = """
@@ -47,9 +48,14 @@ def events_page_fancy():
     items = []
 
     for i in range(0,query_results.shape[0]):
-        items.append(dict(globaleventid=query_results.iloc[i]['globaleventid'], sqldate=query_results.iloc[i]['sqldate'], actor1geo_fullname=query_results.iloc[i]['actor1geo_fullname'], actor1name=query_results.iloc[i]['actor1name'])) #, source_url=query_results.iloc[i]['source_url']))
-#item['actor1geo_fullname']}}</td><td>{{item['actor1name']}}</td><td>{{item['source_url']}}
+        items.append(dict(globaleventid=query_results.iloc[i]['globaleventid'], \
+            sqldate=query_results.iloc[i]['sqldate'], \
+            actor1geo_fullname=query_results.iloc[i]['actor1geo_fullname'], \
+            actor1name=query_results.iloc[i]['actor1name']))
+            #, source_url=query_results.iloc[i]['source_url']))
+            # item['actor1geo_fullname']}}</td><td>{{item['actor1name']}}</td><td>{{item['source_url']}}
     return render_template('test_page.html',items=items)
+
 
 @app.route('/output')
 def location_output():
@@ -58,15 +64,19 @@ def location_output():
 	loc = request.args.get('location')
 
 	#just select the Cesareans  from the birth dtabase for the month that the user inputs
-	query = "SELECT globaleventid, sqldate, actor1name FROM gdelt_events WHERE actor1code='%s'" % loc
+	query = "SELECT globaleventid, sqldate, actor1name, \
+            source_url FROM gdelt_events WHERE actor1countrycode='%s' or actor2countrycode='%s'" %(loc, loc)
 	print(query)
 
 	query_results=pd.read_sql_query(query,con)
 	print(query_results)
 	items = []
 	for i in range(0,query_results.shape[0]):
-		items.append(dict(eventid=query_results.iloc[i]['globaleventid'], date=query_results.iloc[i]['sqldate'], actor_name=query_results.iloc[i]['actor1name']))
-	
+		items.append(dict(eventid=query_results.iloc[i]['globaleventid'], \
+                        date=query_results.iloc[i]['sqldate'], \
+                        actor_name=query_results.iloc[i]['actor1name'], \
+                        sourceurl=query_results.iloc[i]['source_url']))
+
 		#the_result = ''
 
-	return render_template("output.html", items = items) #, the_result = the_result)
+	return render_template("test_page.html", items = items) #, the_result = the_result)
