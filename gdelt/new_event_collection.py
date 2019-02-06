@@ -46,7 +46,7 @@ class Database_Operations(object):
             # execute each command
             for comm in commands:
                 cur.execute(comm)
-            results.append(cur.fetchall())
+            #results.append(cur.fetchall())
             cur.close()
             conn.commit()
         except(Exception, psycopg2.DatabaseError) as error:
@@ -210,7 +210,7 @@ class Data_Gatherer(object):
 
     def delete_recent_files(self):
 
-        time.sleep(5)
+        #time.sleep(5)
         print 'Going to remove some files'
         os.remove('/home/ubuntu/Insight-GDELT-Feed/gdelt/' + self.target_file)
         os.remove('/home/ubuntu/Insight-GDELT-Feed/gdelt/' + self.target_file + '.zip')
@@ -267,7 +267,7 @@ class Data_Gatherer(object):
 
     def load_gdelt_csv(self, data_ops_handler, target=None):
 
-        time.sleep(3)
+        #time.sleep(3)
         command = [ "COPY events FROM '/home/ubuntu/Insight-GDELT-Feed/gdelt/" + self.target_file + "' delimiter '\t' csv;" ]
         print command
 
@@ -314,7 +314,7 @@ def count_psql_query(db_ops): #tone_select):
 
     results = db_ops.db_command(command)
     pprint(results)
-    print 'Length of results - ' + str(len(results[0]))
+    print 'Length of results - ' + str(len(results))
 
 
 if __name__ == '__main__':
@@ -336,11 +336,11 @@ if __name__ == '__main__':
     data_gather.load_gdelt_csv(db_ops)
     #data_gather.transfer_data(db_ops)
 
-    #data_gather.delete_recent_files()
+    data_gather.delete_recent_files()
 
     tone_select = -25.0
     date = 20190205
-    example_psql_query(db_ops, date)
-    count_psql_query(db_ops)
+    #example_psql_query(db_ops, date)
+    #count_psql_query(db_ops)
 
     print 'Done'
