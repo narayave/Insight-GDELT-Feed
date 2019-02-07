@@ -9,7 +9,7 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>Starter Template for Bootstrap</title>
+    <title>InfoCurrent</title>
 
     <!-- Bootstrap core CSS -->
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
@@ -36,15 +36,15 @@
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <!--button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">Project name</a>
+          </button-->
+          <a class="navbar-brand" href="#">Home</a>
         </div>
-        <div id="navbar" class="collapse navbar-collapse">
+        <!--div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             <li class="active"><a href="#">Home</a></li>
             <li><a href="#about">About</a></li>
@@ -59,9 +59,8 @@
     <div class="container">
 
       <div class="starter-template">
-        <h1>Bootstrap starter template</h1>
-        <p class="lead">Use this document as a way to quickly start any new project.<br>
-          All you get is this text and a mostly barebones HTML document.</p>
+        <h1>InfoCurrent</h1>
+        <p class="lead">Helping you make the right choice.</p>
       </div>
 
       <div class = "container">
@@ -69,8 +68,34 @@
 
               <div class="form-group">
                 <label for="location">Location:</label>
-                <input type="text" id="location" name='location' placeholder="Country">
+                <input type="text" id="location" name='location' placeholder="State">
               </div>
+
+              <table class="table table-hover">
+                  <tr>
+                    <td><input type="checkbox" name="check_list[]" value="COP"> Police forces</td>
+                    <td><input type="checkbox" name="check_list[]" value="CRM"> Criminal</td>
+                    <td><input type="checkbox" name="check_list[]" value="CVL"> Civilian</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" name="check_list[]" value="GOV"> Government</td>
+                    <td><input type="checkbox" name="check_list[]" value="JUD"> Judiciary</td>
+                    <td><input type="checkbox" name="check_list[]" value="OPP"> Political Opposition</td>
+                    <td><input type="checkbox" name="check_list[]" value="LEG"> Legislature</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" name="check_list[]" value="BUS"> Business</td>
+                    <td><input type="checkbox" name="check_list[]" value="DEV"> Development</td>
+                    <td><input type="checkbox" name="check_list[]" value="EDU"> Education</td>
+                    <td><input type="checkbox" name="check_list[]" value="ENV"> Environmental</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" name="check_list[]" value="HLH"> Health</td>
+                    <td><input type="checkbox" name="check_list[]" value="HRI"> Human Rights</td>
+                    <td><input type="checkbox" name="check_list[]" value="MED"> Media</td>
+                  </tr>
+              </table>
+
 
               <div>
                 <button type="submit" class="btn btn-default btn-lg">Submit</button>
