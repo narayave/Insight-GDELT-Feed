@@ -72,13 +72,13 @@ def home_page_results():
 
 
     if len(checks) == 1:
-        query = "SELECT * FROM final_results WHERE final_results.action_state='%s' and \
+        query = "SELECT * FROM final_results_test WHERE action_state='%s' and \
                     actor_type = '%s' ORDER BY year DESC;" %(loc, checks[0])
     elif len(checks) > 1:
-        query = "SELECT * FROM final_results WHERE final_results.action_state='%s' and \
+        query = "SELECT * FROM final_results_test WHERE action_state='%s' and \
             actor_type IN %s ORDER BY year DESC;" %(loc, tuple(checks))
     elif checks == []:
-        query = "SELECT * FROM final_results WHERE final_results.action_state='%s' ORDER BY year DESC;" %(loc)
+        query = "SELECT * FROM final_results_test WHERE action_state='%s' ORDER BY year DESC;" %(loc)
 
     print query
 
