@@ -29,7 +29,7 @@ def postgres_dump(config, data_frame):
                 }
 
     mode = 'append'
-    data_frame.write.jdbc(url=url, table="tmp_query2", mode=mode, properties=properties)
+    data_frame.write.jdbc(url=url, table="final_results_test", mode=mode, properties=properties)
 
 
 if __name__ == "__main__":
@@ -39,12 +39,13 @@ if __name__ == "__main__":
     sc = SparkSession.builder \
         .master("spark://ec2-54-84-194-198.compute-1.amazonaws.com:7077") \
         .appName("GDELT-News") \
-        .config("spark.executor.memory", "4gb") \
+        .config("spark.executor.memory", "5gb") \
         .config("spark.jars", "/home/ubuntu/Insight-GDELT-Feed/spark/postgresql-42.2.5.jar").getOrCreate()
 
     sqlcontext = SQLContext(sc)
-    gdelt_bucket = "s3n://gdelt-open-data/v2/events/20180410190000.export.csv"
+    #gdelt_bucket = "s3n://gdelt-open-data/v2/events/20180410190000.export.csv"
     #gdelt_bucket = "s3n://gdelt-open-data/v2/events/20190206*.export.csv"
+    gdelt_bucket = "s3n://gdelt-open-data/v2/events/201*.export.csv"
 
     df = sqlcontext.read \
     	.format('com.databricks.spark.csv') \
@@ -90,7 +91,7 @@ if __name__ == "__main__":
     df_news = df_news.withColumn('action_state', split_col.getItem(1))
     print df_news.show()
 
-    df_news = df_news.groupby('action_state','Year','Actor1Type1Code').agg( F.approx_count_distinct('GLOBALEVENTID'),
+    df_news = df_news.groupby('action_state','Year','Actor1Type1Code').agg( F.approx_count_distinct('GLOBALEVENTID').alias('event_code'),
                                                                             #F.col('SQLDATE'),
                                                                             #F.collect_list('EventCode'),
                                                                             #F.col('Actor1Name'),
@@ -98,8 +99,8 @@ if __name__ == "__main__":
                                                                             #F.collect_list('ActionGeo_ADM1Code'),
                                                                             #F.collect_list('action_state'),
                                                                             #F.collect_list('ActionGeo_Fullname'),
-                                                                            F.avg('GoldsteinScale'),
-                                                                            F.avg('AvgTone'))
+                                                                            F.avg('GoldsteinScale').alias('goldstein_scale'),
+                                                                            F.avg('AvgTone').alias('avg_tone'))
 
     print df_news.show(df_news.count())
     print df_news.printSchema()
