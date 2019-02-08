@@ -62,29 +62,62 @@ def events_page_fancy():
     return render_template('test_page.html',items=items)
 
 
+@app.route('/results')
+def home_page_results():
+
+    loc = request.args.get('location')
+    checks = request.args.getlist('check_list[]')
+    checks = [i.encode('utf-8') for i in checks]
+    print checks
+
+
+    if len(checks) == 1:
+        query = "SELECT * FROM final_results WHERE final_results.action_state='%s' and \
+                    actor_type = '%s' ORDER BY year DESC;" %(loc, checks[0])
+    elif len(checks) > 1:
+        query = "SELECT * FROM final_results WHERE final_results.action_state='%s' and \
+            actor_type IN %s ORDER BY year DESC;" %(loc, tuple(checks))
+    elif checks == []:
+        query = "SELECT * FROM final_results WHERE final_results.action_state='%s' ORDER BY year DESC;" %(loc)
+
+    print query
+
+    query_results=pd.read_sql_query(query,con)
+    print query_results
+    items = []
+    for i in range(0,query_results.shape[0]):
+        items.append (dict(state=query_results.iloc[i]['action_state'], \
+                        year=query_results.iloc[i]['year'], \
+                        actortype=query_results.iloc[i]['actor_type'], \
+                        count=query_results.iloc[i]['event_count'], \
+                        goldsteinscale=query_results.iloc[i]['goldstein_scale'], \
+                        avgtone=query_results.iloc[i]['avg_tone']))
+
+    return render_template("results.html", items = items)
+
+
 @app.route('/output')
 def location_output():
 
-	#pull 'birth_month' from input field and store it
-	loc = request.args.get('location')
-	checks = request.args.getlist('check_list[]')
-	print checks
+    #pull 'birth_month' from input field and store it
+    loc = request.args.get('location')
+    checks = request.args.getlist('check_list[]')
+    print checks
 
-	#just select the Cesareans  from the birth dtabase for the month that the user inputs
-	query = "SELECT globaleventid, sqldate, actor1name, \
+    #just select the Cesareans  from the birth dtabase for the month that the user inputs
+    query = "SELECT globaleventid, sqldate, actor1name, \
             sourceurl FROM events WHERE actor1geo_countrycode='%s' ORDER BY sqLdate DESC LIMIT 10" %(loc)
-	print(query)
+    print(query)
 
-	query_results=pd.read_sql_query(query,con)
-	print(query_results)
-	items = []
-	for i in range(0,query_results.shape[0]):
-		items.append(dict(eventid=query_results.iloc[i]['globaleventid'], \
+    query_results=pd.read_sql_query(query,con)
+    print(query_results)
+    items = []
+    for i in range(0,query_results.shape[0]):
+        items.append(dict(eventid=query_results.iloc[i]['globaleventid'], \
                         date=query_results.iloc[i]['sqldate'], \
                         actor_name=query_results.iloc[i]['actor1name'], \
                         sourceurl=query_results.iloc[i]['sourceurl']))
 
-		#the_result = ''
+        #the_result = ''
 
-	return render_template("output.html", items = items) #, the_result = the_result)
-
+    return render_template("output.html", items = items) #, the_result = the_result)
