@@ -44,9 +44,9 @@ if __name__ == "__main__":
         .config("spark.jars", "/home/ubuntu/Insight-GDELT-Feed/spark/postgresql-42.2.5.jar").getOrCreate()
 
     sqlcontext = SQLContext(sc)
-    gdelt_bucket = "s3n://gdelt-open-data/v2/events/20180410190000.export.csv"
+    #gdelt_bucket = "s3n://gdelt-open-data/v2/events/20180410190000.export.csv"
 
-    #gdelt_bucket = "s3n://gdelt-open-data/v2/events/20190206*.export.csv"
+    gdelt_bucket = "s3n://gdelt-open-data/v2/events/20190206*.export.csv"
     #gdelt_bucket = "s3n://gdelt-open-data/v2/events/201*.export.csv"
 
     df = sqlcontext.read \
@@ -80,23 +80,15 @@ if __name__ == "__main__":
                             'Actor1Type1Code','ActionGeo_FullName','ActionGeo_CountryCode',
                             'ActionGeo_ADM1Code','Actor1Geo_CountryCode','GoldsteinScale', 'AvgTone')
 
-    #df_news.repartition(1000, 'GLOBALEVENTID')
+    #df_news = df_news.repartition(50, 'Actor1Type1Code')
     #df_news.show(10)
 
-    role_codes = ["INS","REB","UAF","ELI","REF","MOD","RAD","MIL","SEP","SPY", \
-                    "CVL","HRI","LAB","REF","AMN","IRC","GRP","UNO","PKO","IGO","IMG", \
-                    "INT","NGM","NGO","UIS","SET","null"]
-    role_codes2 = ["COP", "GOV", "JUD", "BUS", "CRM", "DEV", "EDU", "ENV" \
+    role_codes = ["COP", "GOV", "JUD", "BUS", "CRM", "DEV", "EDU", "ENV" \
                     "HLH", "LEG", "MED", "MNC"]
 
     df_news = df_news.filter(df_news.ActionGeo_CountryCode == 'US')
     df_news = df_news.filter(df_news.Actor1Code != 'null')
-    #df_news = df_news.filter(df_news.Actor1Type1Code != 'null')
-    df_news = df_news.filter(df_news.Actor1Type1Code.isin(role_codes2))
-    #df_news = df_news.filter(df_news.where(df_news.Actor1Type1Code == array(*[lit(x) for x in role_codes])))
-    print '\n\n\n\n\n'
-    #df_test.show()
-    #print 'That was the test'
+    df_news = df_news.filter(df_news.Actor1Type1Code.isin(role_codes))
 
     name = 'ActionGeo_ADM1Code'
     udf = UserDefinedFunction(lambda x: x[:2]+'-'+x[2:], StringType())
@@ -112,16 +104,14 @@ if __name__ == "__main__":
     df_news = df_news.withColumn('action_state', split_col.getItem(1))
     print df_news.show()
 
-    df_news = df_news.groupby('action_state','Year','Actor1Type1Code').agg( F.approx_count_distinct('GLOBALEVENTID').alias('event_code'),
+    df_news = df_news.filter(df_news.action_state != '')
+
+    df_news = df_news.groupby('action_state','Year','Actor1Type1Code').agg( F.approx_count_distinct('GLOBALEVENTID').alias('events_count'),
                                                                             #F.col('SQLDATE'),
                                                                             #F.collect_list('EventCode'),
-                                                                            #F.col('Actor1Name'),
-                                                                            #F.col('Actor2Name'),
-                                                                            #F.collect_list('ActionGeo_ADM1Code'),
-                                                                            #F.collect_list('action_state'),
-                                                                            #F.collect_list('ActionGeo_Fullname'),
-                                                                            F.sum('normg_scale').alias('norm_scale')) #Calculate avg by dividing by event count
-                                                                            #F.avg('AvgTone').alias('avg_tone'))
+                                                                            #F,avg('AvgTone').alias('avg_tone'),
+                                                                            F.sum('normg_scale').alias('norm_score_cale'))
+                                                                            #Calculate avg by dividing by event count
 
     print df_news.show(df_news.count())
     print df_news.printSchema()
