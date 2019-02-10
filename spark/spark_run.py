@@ -10,7 +10,8 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import UserDefinedFunction
 from pyspark.sql.functions import array, lit
 
-import gdelt_schema
+import gdelt_schema_v1
+import gdelt_schema_v2
 from six.moves import configparser
 
 def postgres_dump(config, data_frame):
@@ -44,18 +45,25 @@ if __name__ == "__main__":
         .config("spark.jars", "/home/ubuntu/Insight-GDELT-Feed/spark/postgresql-42.2.5.jar").getOrCreate()
 
     sqlcontext = SQLContext(sc)
-    #gdelt_bucket = "s3n://gdelt-open-data/v2/events/20180410190000.export.csv"
-
-    gdelt_bucket = "s3n://gdelt-open-data/v2/events/20190206*.export.csv"
+    gdelt_bucket = "s3n://gdelt-open-data/v2/events/20180410190000.export.csv"
+    gdelt_bucket2 = "s3n://gdelt-open-data/events/200601.csv"
+    #gdelt_bucket = "s3n://gdelt-open-data/v2/events/20190206*.export.csv"
     #gdelt_bucket = "s3n://gdelt-open-data/v2/events/201*.export.csv"
 
     df = sqlcontext.read \
     	.format('com.databricks.spark.csv') \
     	.options(header='false') \
     	.options(delimiter="\t") \
-	.load(gdelt_bucket, schema = gdelt_schema.gdeltSchema)
+	.load(gdelt_bucket, schema = gdelt_schema_v2.gdeltSchema) \
+ 
+    df_2 = sqlcontext.read \
+        .format('com.databricks.spark.csv') \
+        .options(header='false') \
+        .options(delimiter="\t") \
+        .load(gdelt_bucket2, schema = gdelt_schema_v1.gdeltSchema)
 
     sqlcontext.registerDataFrameAsTable(df, 'temp')
+    sqlcontext.registerDataFrameAsTable(df_2, 'temp2')
 
     df_clean = sqlcontext.sql("""SELECT GLOBALEVENTID,
                               CAST(SQLDATE AS INTEGER),
@@ -71,18 +79,42 @@ if __name__ == "__main__":
                               ActionGeo_ADM1Code,
 			      Actor2Name,
 			      Actor2Geo_CountryCode,
-                              CAST(GoldsteinScale AS DOUBLE),
-			      AvgTone
+                              GoldsteinScale
                             from temp
                             """)
 
     df_news = df_clean.select('GLOBALEVENTID','SQLDATE','MonthYear','Year','Actor1Code',
                             'Actor1Type1Code','ActionGeo_FullName','ActionGeo_CountryCode',
-                            'ActionGeo_ADM1Code','Actor1Geo_CountryCode','GoldsteinScale', 'AvgTone')
+                            'ActionGeo_ADM1Code','Actor1Geo_CountryCode','GoldsteinScale')
 
-    #df_news = df_news.repartition(50, 'Actor1Type1Code')
-    #df_news.show(10)
+    df_clean2 = sqlcontext.sql("""SELECT GLOBALEVENTID,
+                            CAST(SQLDATE AS INTEGER),
+                            MonthYear,
+                            Year,
+                            EventCode,
+                            Actor1Code,
+                            Actor1Name,
+                            Actor1Type1Code,
+                            ActionGeo_FullName,
+                            ActionGeo_CountryCode,
+                            Actor1Geo_CountryCode,
+                            ActionGeo_ADM1Code,
+                            GoldsteinScale
+                            from temp2
+                            """)
 
+    df_clean2.show()
+
+    df_news2 = df_clean2.select('GLOBALEVENTID','SQLDATE','MonthYear','Year','Actor1Code',
+                            'Actor1Type1Code', 'ActionGeo_FullName', 'ActionGeo_CountryCode',
+                            'ActionGeo_ADM1Code','Actor1Geo_CountryCode','GoldsteinScale')
+
+
+    df_news = df_news.union(df_news2)
+
+    df_news.show()
+
+                                    
     role_codes = ["COP", "GOV", "JUD", "BUS", "CRM", "DEV", "EDU", "ENV" \
                     "HLH", "LEG", "MED", "MNC"]
 
