@@ -31,7 +31,7 @@ gdeltSchema =  StructType([
     StructField('EventBaseCode',StringType(),True),
     StructField('EventRootCode',StringType(),True),
     StructField('QuadClass',StringType(),True),
-    StructField('GoldsteinScale',StringType(),True),
+    StructField('GoldsteinScale',DoubleType(),True),
     StructField('NumMentions',StringType(),True),
     StructField('NumSources',StringType(),True),
     StructField('NumArticles',StringType(),True),
