@@ -83,7 +83,19 @@
 			</div> <!-- /.container-->
 
 
-		<div class="container">
+			<div class="container">
+				<!-- <div class="starter-template"> -->
+						<h3>Results:</h3>
+
+						{% for id in ids %}
+        			<h3>{{id}}</h3>
+        			<div id="{{id}}"></div>
+						{% endfor %}
+
+				<!-- </div> -->
+			</div>
+
+		<!--div class="container">
 			<div class="starter-template">
 				<h3>Results:</h3>
 				<p class="lead">Below is the result of your query.<br></p>
@@ -109,7 +121,8 @@
 				</tr>
 				{% endfor %}
 			</table>
-		 </div><!-- /.container -->
+		 </div-->
+		 <!-- /.container -->
 
 <!--
 		<div class="container">
@@ -123,4 +136,26 @@
 		</div><!-- /.container -->
 
 	</body>
+
+	<footer>
+			<!-- D3.js -->
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+			<!-- jQuery -->
+			<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+			<!-- Plotly.js -->
+			<!-- <script src="https://d14fo0winaifog.cloudfront.net/plotly-basic.js"></script> -->
+			<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+			<script type="text/javascript">
+					var graphs = {{graphJSON | safe}};
+					var ids = {{ids | safe}};
+					for(var i in graphs) {
+							Plotly.plot(ids[i], // the ID of the div, created above
+													graphs[i].data,
+													graphs[i].layout || {});
+					}
+			</script>
+	</footer>
+
+
 </html>

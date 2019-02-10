@@ -7,6 +7,9 @@ import psycopg2
 from flask import request
 from six.moves import configparser
 
+import json
+import plotly
+
 config = configparser.ConfigParser()
 # TODO: Make sure to read the correct config.ini file on AWS workers
 config.read('/home/vee/repos/Insight-GDELT-Feed/flask/flaskexample/config.ini')
@@ -93,7 +96,40 @@ def home_page_results():
                         goldsteinscale=query_results.iloc[i]['goldstein_scale'], \
                         avgtone=query_results.iloc[i]['avg_tone']))
 
-    return render_template("results.html", items = items)
+
+    years = map(int, list(query_results['year'].values))
+    print years
+    scales = map(float, list(query_results['goldstein_scale'].values))
+    print scales
+
+    graphs = [
+            dict(
+                data=[
+                    dict(
+                        x=years,
+                        y=scales,
+                        type='scatter'
+                    )
+                ],
+                layout=dict(
+                    title='first graph'
+                )
+            )
+    ]
+
+    # Add "ids" to each of the graphs to pass up to the client
+        # for templating
+    ids = ['graph-{}'.format(i) for i, _ in enumerate(graphs)]
+
+    # Convert the figures to JSON
+    # PlotlyJSONEncoder appropriately converts pandas, datetime, etc
+    # objects to their JSON equivalents
+    graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
+
+    print graphJSON
+
+    # return render_template("results.html", items = items)
+    return render_template("results.html", ids=ids, graphJSON=graphJSON)
 
 
 @app.route('/output')
