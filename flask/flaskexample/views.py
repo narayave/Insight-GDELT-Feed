@@ -9,6 +9,8 @@ from six.moves import configparser
 
 import json
 import plotly
+import pandas as pd
+import pandasql as ps
 
 config = configparser.ConfigParser()
 # TODO: Make sure to read the correct config.ini file on AWS workers
@@ -71,6 +73,7 @@ def home_page_results():
     loc = request.args.get('location')
     checks = request.args.getlist('check_list[]')
     checks = [i.encode('utf-8') for i in checks]
+    ticks = checks
     print checks
 
 
@@ -96,6 +99,9 @@ def home_page_results():
                         goldsteinscale=query_results.iloc[i]['goldstein_scale'], \
                         avgtone=query_results.iloc[i]['avg_tone']))
 
+    query = "SELECT year, actor_type, goldstein_scale FROM query_results WHERE actor_type ='"+ticks[0]+"'"
+
+    print ps.sqldf(query, locals())
 
     years = map(int, list(query_results['year'].values))
     print years
