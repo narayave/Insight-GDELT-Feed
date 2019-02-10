@@ -36,21 +36,8 @@
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
-          <!--button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button-->
           <a class="navbar-brand" href="#">Home</a>
         </div>
-        <!--div id="navbar" class="collapse navbar-collapse">
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-        </div><!--/.nav-collapse -->
       </div>
     </nav>
 
@@ -102,14 +89,23 @@
 				<p class="lead">Below is the result of your query.<br></p>
 		  	</div>
 			<table class="table table-hover">
-				<tr><th>Event ID</th><th>Date</th><th>Actor Name</th><th>Source URL</th></tr>
+				<tr>
+                    <th>State</th>
+                    <th>Year</th>
+                    <th>Actor Type</th>
+                    <th>Event Count</th>
+                    <th>Goldstein Scale</th>
+                    <th>Average Tone</th>
+                </tr>
 
 				{% for item in items %}
 				<tr>
-					<td>{{ item['eventid'] }}</td>
-					<td>{{ item['date']}}</td>
-					<td>{{item['actor_name'] }}</td>
-					<td>{{item['sourceurl'] }}</td>
+					<td>{{item['state'] }}</td>
+					<td>{{item['year']}}</td>
+					<td>{{item['actortype'] }}</td>
+                    <td>{{item['count'] }}</td>
+					<td>{{item['goldsteinscale'] }}</td>
+					<td>{{item['avgtone'] }}</td>
 				</tr>
 				{% endfor %}
 			</table>

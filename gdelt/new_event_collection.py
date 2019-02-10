@@ -8,12 +8,16 @@ from pprint import pprint
 import boto3
 import botocore
 import os
+import time
 
+from urllib import urlopen
+from zipfile import ZipFile
+import urllib
 
 class Database_Operations(object):
 
     def __init__(self, config):
-        config.read('config.ini')
+        config.read('/home/ubuntu/Insight-GDELT-Feed/gdelt/config.ini')
         self.__db_name = config.get('dbauth', 'dbname')
         self.__db_user = config.get('dbauth', 'user')
         self.__db_pass = config.get('dbauth', 'password')
@@ -42,7 +46,7 @@ class Database_Operations(object):
             # execute each command
             for comm in commands:
                 cur.execute(comm)
-                results.append(cur.fetchall())
+            #results.append(cur.fetchall())
             cur.close()
             conn.commit()
         except(Exception, psycopg2.DatabaseError) as error:
@@ -165,26 +169,52 @@ class Data_Gatherer(object):
             'ActionGeo_Type', 'ActionGeo_FullName', 'ActionGeo_CountryCode', \
             'ActionGeo_ADM1Code', 'gap_3', 'ActionGeo_Lat', 'ActionGeo_Long', \
             'ActionGeo_FeatureID', 'DATEADDED', 'SOURCEURL']
-
+	self.target_file_url = None
 
     def set_target_file(self):
 
         target_file_link = None
 
-        data = urllib2.urlopen(self.target_url)
+        data = urlopen(self.target_url)
         for line in data:
             target_file_link = line
             break
 
         # file size, hash, link to zip
         target_link = target_file_link.split(" ")[2]
+	self.target_file_url = target_link
 
         target_file = target_link.split("/")[-1]
         target_filename = target_file.replace(".zip\n", "")
         print 'Target file - ' + target_file
+	print 'Target file URL - ' + target_link
 
         self.target_file = target_filename
 
+
+    def download_zip(self):
+	print 'Going to download latest GDELT update file'
+	#urllib.request.urlretrieve(self.target_file_url, "/home/ubuntu/Insight-GDELT-Feed/gdelt/")
+        urllib.urlretrieve(self.target_file_url, "/home/ubuntu/Insight-GDELT-Feed/gdelt/"+self.target_file+".zip")
+
+
+    def unzip_download(self):
+	filename = '/home/ubuntu/Insight-GDELT-Feed/gdelt/' + self.target_file + '.zip'
+        print 'To unzip - ' + filename
+
+        with ZipFile(filename, 'r') as zip:
+            # extracting all the files
+            print('Extracting all the files now...')
+            zip.extractall('/home/ubuntu/Insight-GDELT-Feed/gdelt/')
+            print('Done!')
+
+    def delete_recent_files(self):
+
+        #time.sleep(5)
+        print 'Going to remove some files'
+        os.remove('/home/ubuntu/Insight-GDELT-Feed/gdelt/' + self.target_file)
+        os.remove('/home/ubuntu/Insight-GDELT-Feed/gdelt/' + self.target_file + '.zip')
+        print 'Removed those recent files'
 
     def generate_sql_command(self, record):
 
@@ -237,7 +267,9 @@ class Data_Gatherer(object):
 
     def load_gdelt_csv(self, data_ops_handler, target=None):
 
-        command = [ "COPY events FROM '/home/ubuntu/Insight-GDELT-Feed/gdelt/events.csv' delimiter '\t' csv;" ]
+        #time.sleep(3)
+        command = [ "COPY events FROM '/home/ubuntu/Insight-GDELT-Feed/gdelt/" + self.target_file + "' delimiter '\t' csv;" ]
+        print command
 
         results = data_ops_handler.db_command(command)
         print results
@@ -263,17 +295,26 @@ class Data_Gatherer(object):
         print results
 
 
-def example_psql_query(db_ops, tone_select):
+def example_psql_query(db_ops, date): #tone_select):
 
-    command = ["SELECT * FROM events WHERE events.avgtone < " + \
-                str(tone_select) + " ORDER BY events.sqldate DESC;"]
+    command = ["SELECT * FROM events WHERE events.sqldate >= " + \
+                str(date) + " ORDER BY events.sqldate DESC;"]
 		#"""
 		#SELECT * FROM events ORDER by events.sqldate DESC;
 		#"""]
 
     results = db_ops.db_command(command)
+    #pprint(results)
+    print 'Length of results - ' + str(len(results[0]))
+
+
+def count_psql_query(db_ops): #tone_select):
+
+    command = ["SELECT COUNT(*) FROM events WHERE events.sqldate > 0;"]
+
+    results = db_ops.db_command(command)
     pprint(results)
-    print 'Length of results - ' + str(results)
+    print 'Length of results - ' + str(len(results))
 
 
 if __name__ == '__main__':
@@ -283,6 +324,8 @@ if __name__ == '__main__':
     data_gather = Data_Gatherer()
 
     data_gather.set_target_file()
+    data_gather.download_zip()
+    data_gather.unzip_download()
 
     # db_ops.create_gdelt_table()
     #db_ops.create_events_table()
@@ -290,10 +333,14 @@ if __name__ == '__main__':
 
     # data_gather.read_s3_file_contents(db_ops)
 
-    #data_gather.load_gdelt_csv(db_ops)
+    data_gather.load_gdelt_csv(db_ops)
     #data_gather.transfer_data(db_ops)
 
-    tone_select = -5.0
-    example_psql_query(db_ops, tone_select)
+    data_gather.delete_recent_files()
+
+    tone_select = -25.0
+    date = 20190205
+    #example_psql_query(db_ops, date)
+    #count_psql_query(db_ops)
 
     print 'Done'
