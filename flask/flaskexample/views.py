@@ -108,7 +108,14 @@ def home_page_results():
                     dict(
                         x=years,
                         y=scales,
-                        type='scatter'
+                        name='original',
+                        type='line'
+                    ),
+                    dict(
+                        x=[2005, 2007, 2012, 2018],
+                        y=[5.0, -6, 4, 1],
+                        name='test',
+                        type='line'
                     )
                 ],
                 layout=dict(
