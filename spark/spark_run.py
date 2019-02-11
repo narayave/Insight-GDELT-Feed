@@ -31,13 +31,15 @@ def postgres_dump(config, data_frame):
                 }
 
     mode = 'append'
-    data_frame.write.jdbc(url=url, table="final_results_test", mode=mode, \
+    data_frame.write.jdbc(url=url, table="central_results", mode=mode, \
                 properties=properties)
 
 
 def get_clean_df(sqlcontext, sql_df):
 
     sqlcontext.registerDataFrameAsTable(sql_df, 'temp')
+
+    # export PYTHONIOENCODING=utf8 <- ran that for utf8 decode error
 
     df_clean = sqlcontext.sql("""SELECT GLOBALEVENTID,
                         CAST(SQLDATE AS INTEGER), MonthYear,
@@ -67,6 +69,11 @@ def filter_df(df_news):
     df_news = df_news.filter(df_news.Actor1Code != 'null')
     df_news = df_news.filter(df_news.Actor1Type1Code.isin(role_codes_of_interest))
 
+    df_news.show()
+
+    #df_news = df_news.filter(df_news.GoldsteinScale != 'null')
+    #df_news = df_news.filter(df_news.GoldsteinScale != '')
+
     # There isn't a specific column specifying the state that the event happens in
     #   The state is tied with the country code
     #   So, parse out the state and make it a new column
@@ -83,27 +90,32 @@ def filter_df(df_news):
     #   Higher value denotes a more positive outcome
     name = 'GoldsteinScale'
     min_scale, max_scale = -10.0, 10.0
-    norm = UserDefinedFunction(lambda x: (x - min_scale)/(max_scale - \
-                                min_scale), DoubleType())
+    norm = UserDefinedFunction(lambda x: (x - min_scale)/(max_scale - min_scale), DoubleType())
     df_news = df_news.select(*[norm(col).cast(DoubleType()) \
                 .alias('normg_scale') if col == name else col for col in \
                     df_news.columns])
 
     df_news = df_news.filter(df_news.action_state != '')
 
+    df_news = aggregate_job(df_news)
+
+    return df_news
 
 def aggregate_job(df_news):
 
-    df_news = df_news.groupby('action_state','Year','Actor1Type1Code') \
+    df_finalized = df_news.groupby('action_state','Year','Actor1Type1Code') \
                     .agg( \
                         F.approx_count_distinct('GLOBALEVENTID').alias('events_count'),
                         F.sum('normg_scale').alias('norm_score_cale'))
                         #Calculate avg by dividing by event count
 
-    print finalized_df.show(finalized_df.count())
-    print finalized_df.printSchema()
+    print df_finalized.show(df_finalized.count())
+    #print df_finalized.printSchema()
 
-    return df_news
+    #if not 'Actor1Type1Code' in df_finalized.columns:
+    #   df = df.withColumn('Actor1Type1Code', f.lit(''))
+
+    return df_finalized
 
 if __name__ == "__main__":
 
@@ -117,10 +129,11 @@ if __name__ == "__main__":
 
     sqlcontext = SQLContext(sc)
 
-    gdelt_bucket1 = "s3n://gdelt-open-data/events/[1,2][0-9]*[0-9][0-3|9].csv"
-    gdelt_bucket2 = "s3n://gdelt-open-data/events/*.export.csv"
-    #gdelt_bucket1 = "s3n://gdelt-open-data/events/200806.csv"
-    #gdelt_bucket2 = "s3n://gdelt-open-data/events/20150329.export.csv"
+
+    #gdelt_bucket1 = "s3n://gdelt-open-data/events/[1,2][0-9]*[0-9][0-3|9].csv"
+    #gdelt_bucket2 = "s3n://gdelt-open-data/events/*.export.csv"
+    gdelt_bucket1 = "s3n://gdelt-open-data/events/200806.csv"
+    gdelt_bucket2 = "s3n://gdelt-open-data/events/20150329.export.csv"
 
     # Original datasets had a different schema from the new one
     #   Thus, we need two different ways to read the data
@@ -145,9 +158,11 @@ if __name__ == "__main__":
 
     # Filter and aggregate data
     processed_df = filter_df(df_news)
-    finalized_df = aggregate_job(processed_df)
+    #finalized_df = aggregate_job(processed_df)
+
+    processed_df.printSchema()
 
     # Write to database
-    postgres_dump(config, finalized_df)
+    postgres_dump(config, processed_df)
 
     print 'Done'
