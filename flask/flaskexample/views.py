@@ -96,7 +96,7 @@ def home_page_results():
     # query_results=pd.read_sql_query("SELECT * FROM central_results;",con)
     query_results=pd.read_sql_query(query,con)
     print query_results
-    datas = []
+
     # for i in range(0,query_results.shape[0]):
     #     items.append (dict(state=query_results.iloc[i]['action_state'], \
     #                     year=query_results.iloc[i]['year'], \
@@ -105,6 +105,7 @@ def home_page_results():
     #                     goldsteinscale=query_results.iloc[i]['goldstein_scale'], \
     #                     avgtone=query_results.iloc[i]['avg_tone']))
 
+    results_dict = []
     for i in ticks:
         query = "SELECT year, actor_type, events_count, norm_scale FROM query_results WHERE actor_type ='"+i+"'"
 
@@ -115,22 +116,26 @@ def home_page_results():
         norms_scale = results_tmp['norm_scale'].values
 
         scores_avg = [j / i for i, j in zip(event_counts, norms_scale)]
-
         print 'Scores_avg ' + str(scores_avg)
-
 
         years = map(int, list(results_tmp['year'].values))
         scores = map(float, scores_avg)
-        # for item in query
-        datas.append(dict(x=years, y=scores, name=results_tmp['actor_type'][0], type='line'))
 
-    pprint(datas)
+        try:
+            # for item in query
+            results_dict.append(dict(x=years, y=scores, name=results_tmp['actor_type'][0], type='line'))
+        except Exception as e:
+            print 'Error message - ' + str(e)
+            continue
+
+    pprint(results_dict)
 
     print ps.sqldf(query, locals())
 
     graphs = [
             dict( #data,
-                data=[ datas[0],datas[1]
+                data = [item for item in results_dict],
+                # data=[ datas[0],datas[1]
                     # dict(
                     #     x=years,
                     #     y=scores,
@@ -143,17 +148,17 @@ def home_page_results():
                     #     name='test',
                     #     type='line'
                     # )
-                ],
-                layout=dict(
-                    title='Result'
-                )
+                # ],
+                # layout=dict(
+                #     title='Result'
+                # )
             )
     ]
 
     # Add "ids" to each of the graphs to pass up to the client
         # for templating
     # ids = ['graph-{}'.format(i) for i, _ in enumerate(graphs)]
-    ids = ['Results']
+    ids = ['Results:']
 
     # Convert the figures to JSON
     # PlotlyJSONEncoder appropriately converts pandas, datetime, etc
