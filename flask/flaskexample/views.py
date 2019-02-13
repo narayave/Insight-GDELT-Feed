@@ -6,6 +6,11 @@ import pandas as pd
 import psycopg2
 from flask import request
 from six.moves import configparser
+from pprint import pprint
+
+import json
+import plotly
+import pandasql as ps
 
 config = configparser.ConfigParser()
 # TODO: Make sure to read the correct config.ini file on AWS workers
@@ -65,35 +70,105 @@ def events_page_fancy():
 @app.route('/results')
 def home_page_results():
 
+    all_actor_roles = ["COP", "GOV", "JUD", "BUS", "CRM", "DEV", "EDU", "ENV" \
+                            "HLH", "LEG", "MED", "MNC"]
+
     loc = request.args.get('location')
     checks = request.args.getlist('check_list[]')
     checks = [i.encode('utf-8') for i in checks]
+    ticks = checks
     print checks
 
 
     if len(checks) == 1:
-        query = "SELECT * FROM final_results_test WHERE action_state='%s' and \
-                    actor_type = '%s' ORDER BY year DESC;" %(loc, checks[0])
+        query = "SELECT * FROM central_results WHERE action_state='%s' and \
+                    Actor1Type1Code = '%s' ORDER BY year DESC;" %(loc, checks[0])
     elif len(checks) > 1:
-        query = "SELECT * FROM final_results_test WHERE action_state='%s' and \
+        # query = "SELECT * FROM central_results WHERE action_state='%s' and \
+        #     'Actor1Type1Code' IN %s ORDER BY \"Year\" DESC;" %(loc, tuple(checks))
+        query = "SELECT * FROM central_results WHERE action_state='%s' and \
             actor_type IN %s ORDER BY year DESC;" %(loc, tuple(checks))
     elif checks == []:
-        query = "SELECT * FROM final_results_test WHERE action_state='%s' ORDER BY year DESC;" %(loc)
+        query = "SELECT * FROM central_results WHERE action_state='%s' ORDER BY year DESC;" %(loc)
 
     print query
 
+    # query_results=pd.read_sql_query("SELECT * FROM central_results;",con)
     query_results=pd.read_sql_query(query,con)
     print query_results
-    items = []
-    for i in range(0,query_results.shape[0]):
-        items.append (dict(state=query_results.iloc[i]['action_state'], \
-                        year=query_results.iloc[i]['year'], \
-                        actortype=query_results.iloc[i]['actor_type'], \
-                        count=query_results.iloc[i]['event_count'], \
-                        goldsteinscale=query_results.iloc[i]['goldstein_scale'], \
-                        avgtone=query_results.iloc[i]['avg_tone']))
 
-    return render_template("results.html", items = items)
+    # for i in range(0,query_results.shape[0]):
+    #     items.append (dict(state=query_results.iloc[i]['action_state'], \
+    #                     year=query_results.iloc[i]['year'], \
+    #                     actortype=query_results.iloc[i]['actor_type'], \
+    #                     count=query_results.iloc[i]['event_count'], \
+    #                     goldsteinscale=query_results.iloc[i]['goldstein_scale'], \
+    #                     avgtone=query_results.iloc[i]['avg_tone']))
+
+    results_dict = []
+    for i in ticks:
+        query = "SELECT year, actor_type, events_count, norm_scale FROM query_results WHERE actor_type ='"+i+"'"
+
+        results_tmp = ps.sqldf(query, locals())
+        print results_tmp
+
+        event_counts = results_tmp['events_count'].values
+        norms_scale = results_tmp['norm_scale'].values
+
+        scores_avg = [j / i for i, j in zip(event_counts, norms_scale)]
+        print 'Scores_avg ' + str(scores_avg)
+
+        years = map(int, list(results_tmp['year'].values))
+        scores = map(float, scores_avg)
+
+        try:
+            # for item in query
+            results_dict.append(dict(x=years, y=scores, name=results_tmp['actor_type'][0], type='line'))
+        except Exception as e:
+            print 'Error message - ' + str(e)
+            continue
+
+    pprint(results_dict)
+
+    print ps.sqldf(query, locals())
+
+    graphs = [
+            dict( #data,
+                data = [item for item in results_dict],
+                # data=[ datas[0],datas[1]
+                    # dict(
+                    #     x=years,
+                    #     y=scores,
+                    #     name='original',
+                    #     type='line'
+                    # ),
+                    # dict(
+                    #     x=[2005, 2007, 2012, 2018],
+                    #     y=[2.0, -2, 4, 1],
+                    #     name='test',
+                    #     type='line'
+                    # )
+                # ],
+                # layout=dict(
+                #     title='Result'
+                # )
+            )
+    ]
+
+    # Add "ids" to each of the graphs to pass up to the client
+        # for templating
+    # ids = ['graph-{}'.format(i) for i, _ in enumerate(graphs)]
+    ids = ['Results:']
+
+    # Convert the figures to JSON
+    # PlotlyJSONEncoder appropriately converts pandas, datetime, etc
+    # objects to their JSON equivalents
+    graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
+
+    print graphJSON
+
+    # return render_template("results.html", items = items)
+    return render_template("results.html", ids=ids, graphJSON=graphJSON)
 
 
 @app.route('/output')
