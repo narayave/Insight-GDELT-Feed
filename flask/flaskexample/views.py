@@ -6,6 +6,7 @@ import pandas as pd
 import psycopg2
 from flask import request
 from six.moves import configparser
+from pprint import pprint
 
 import json
 import plotly
@@ -95,7 +96,7 @@ def home_page_results():
     # query_results=pd.read_sql_query("SELECT * FROM central_results;",con)
     query_results=pd.read_sql_query(query,con)
     print query_results
-    data = []
+    datas = []
     # for i in range(0,query_results.shape[0]):
     #     items.append (dict(state=query_results.iloc[i]['action_state'], \
     #                     year=query_results.iloc[i]['year'], \
@@ -113,50 +114,46 @@ def home_page_results():
         event_counts = results_tmp['events_count'].values
         norms_scale = results_tmp['norm_scale'].values
 
-        scores_tmp = [i / j for i, j in zip(event_counts, norms_scale)]
+        scores_avg = [j / i for i, j in zip(event_counts, norms_scale)]
 
-        print 'Scores_tmp ' + str(scores_tmp)
+        print 'Scores_avg ' + str(scores_avg)
 
 
         years = map(int, list(results_tmp['year'].values))
-        scores = map(float, scores_tmp)
+        scores = map(float, scores_avg)
         # for item in query
-        data.append(dict(x=years, y=scores, name=results_tmp['actor_type'][0], type='line'))
+        datas.append(dict(x=years, y=scores, name=results_tmp['actor_type'][0], type='line'))
 
-    print data
+    pprint(datas)
 
     print ps.sqldf(query, locals())
 
-    # years = map(int, list(query_results['year'].values))
-    # print years
-    # scales = map(float, list(query_results['goldstein_scale'].values))
-    # print scales
-
     graphs = [
             dict( #data,
-                data=[
-                    dict(
-                        x=years,
-                        y=scores,
-                        name='original',
-                        type='line'
-                    ),
-                    dict(
-                        x=[2005, 2007, 2012, 2018],
-                        y=[2.0, -2, 4, 1],
-                        name='test',
-                        type='line'
-                    )
+                data=[ datas[0],datas[1]
+                    # dict(
+                    #     x=years,
+                    #     y=scores,
+                    #     name='original',
+                    #     type='line'
+                    # ),
+                    # dict(
+                    #     x=[2005, 2007, 2012, 2018],
+                    #     y=[2.0, -2, 4, 1],
+                    #     name='test',
+                    #     type='line'
+                    # )
                 ],
                 layout=dict(
-                    title='first graph'
+                    title='Result'
                 )
             )
     ]
 
     # Add "ids" to each of the graphs to pass up to the client
         # for templating
-    ids = ['graph-{}'.format(i) for i, _ in enumerate(graphs)]
+    # ids = ['graph-{}'.format(i) for i, _ in enumerate(graphs)]
+    ids = ['Results']
 
     # Convert the figures to JSON
     # PlotlyJSONEncoder appropriately converts pandas, datetime, etc
