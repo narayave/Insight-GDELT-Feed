@@ -14,7 +14,7 @@ import pandasql as ps
 
 config = configparser.ConfigParser()
 # TODO: Make sure to read the correct config.ini file on AWS workers
-config.read('/home/vee/repos/Insight-GDELT-Feed/flask/flaskexample/config.ini')
+config.read('/home/ubuntu/Insight-GDELT-Feed/flask/flaskexample/config.ini')
 dbname = config.get('dbauth', 'dbname')
 dbuser = config.get('dbauth', 'user')
 dbpass = config.get('dbauth', 'password')
@@ -81,15 +81,15 @@ def home_page_results():
 
 
     if len(checks) == 1:
-        query = "SELECT * FROM central_results WHERE action_state='%s' and \
-                    Actor1Type1Code = '%s' ORDER BY year DESC;" %(loc, checks[0])
+        query = "SELECT * FROM central_results_new WHERE action_state='%s' and \
+                    actor_type = '%s' and CAST(year AS INTEGER) >= 2010 ORDER BY year DESC;" %(loc, checks[0])
     elif len(checks) > 1:
         # query = "SELECT * FROM central_results WHERE action_state='%s' and \
         #     'Actor1Type1Code' IN %s ORDER BY \"Year\" DESC;" %(loc, tuple(checks))
-        query = "SELECT * FROM central_results WHERE action_state='%s' and \
-            actor_type IN %s ORDER BY year DESC;" %(loc, tuple(checks))
+        query = "SELECT * FROM central_results_new WHERE action_state='%s' and \
+            actor_type IN %s and CAST(year as INTEGER) >= 2010 ORDER BY year DESC;" %(loc, tuple(checks))
     elif checks == []:
-        query = "SELECT * FROM central_results WHERE action_state='%s' ORDER BY year DESC;" %(loc)
+        query = "SELECT * FROM central_results_new WHERE action_state='%s' ORDER BY year DESC;" %(loc)
 
     print query
 
