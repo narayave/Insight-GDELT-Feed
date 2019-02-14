@@ -29,27 +29,9 @@ def get_df(con):
     except Exception as e:
         print 'Error -' + str(e)
 
-    print dataframe
+    # print dataframe
 
     return dataframe
-
-
-def get_clean_df(dataframe):
-
-    query = """
-                SELECT GLOBALEVENTID, CAST(SQLDATE AS INTEGER),
-                MonthYear, Year, Actor1Code, Actor1Type1Code,
-                ActionGeo_FullName, ActionGeo_ADM1Code,
-                Actor1Geo_CountryCode, CAST(GoldsteinScale AS DOUBLE)
-                FROM dataframe
-            """
-
-    print 'In get clean df function'
-
-    results_tmp = ps.sqldf(query, locals())
-    print results_tmp
-
-    return df
 
 
 def filter_dataframe(df):
@@ -70,10 +52,34 @@ def filter_dataframe(df):
 
 def get_states(df):
 
+    action_state = df['actiongeo_adm1code'].apply(lambda x: x[2:])
 
-    print df['ActionGeo_ADM1Code']
+    df['action_state'] = action_state
+    # pprint(df)
+    df = df.loc[df.actiongeo_adm1code != "US"]
+
+    # pprint(df)
 
     return df
+
+
+def normalize_goldstein(df):
+
+    print 'In normalize goldstein function'
+
+    df = df.loc[df.goldsteinscale > -20.0]
+
+    min_scale, max_scale = -10.000005, 10.000005
+    norm_gold = df['goldsteinscale'].apply(lambda x: (x - min_scale)/(max_scale - min_scale))
+
+    print norm_gold
+
+    df['norm_scale'] = norm_gold
+    pprint(df)
+
+    return df
+
+
 
 def aggregate_data(df):
 
@@ -97,11 +103,7 @@ if __name__ == '__main__':
     con = psycopg2.connect(database = dbname, host = dbhost, user = dbuser, password = dbpass)
 
     df = get_df(con)
-    # df = get_clean_df(df)
-
-    # df = filter_dataframe(df)
-
-    # df = get_states(df)
-
+    df = get_states(df)
+    df = normalize_goldstein(df)
 
     print 'Done'
