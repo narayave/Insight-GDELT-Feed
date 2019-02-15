@@ -81,19 +81,17 @@ def home_page_results():
 
 
     if len(checks) == 1:
-        query = "SELECT * FROM central_results_new WHERE action_state='%s' and \
-                    actor_type = '%s' and CAST(year AS INTEGER) >= 2010 ORDER BY year DESC;" %(loc, checks[0])
+        query = "SELECT * FROM monthyr_central_results WHERE action_state='%s' and \
+                    actor_type = '%s' and CAST(year AS INTEGER) >= 2010 ORDER BY month_year DESC;" %(loc, checks[0])
     elif len(checks) > 1:
-        # query = "SELECT * FROM central_results WHERE action_state='%s' and \
-        #     'Actor1Type1Code' IN %s ORDER BY \"Year\" DESC;" %(loc, tuple(checks))
-        query = "SELECT * FROM central_results_new WHERE action_state='%s' and \
-            actor_type IN %s and CAST(year as INTEGER) >= 2010 ORDER BY year DESC;" %(loc, tuple(checks))
+        query = "SELECT * FROM monthyr_central_results WHERE action_state='%s' and \
+            actor_type IN %s and CAST(year as INTEGER) >= 2006 ORDER BY month_year;" %(loc, tuple(checks))
     elif checks == []:
-        query = "SELECT * FROM central_results_new WHERE action_state='%s' ORDER BY year DESC;" %(loc)
+        query = "SELECT * FROM monthyr_central_results WHERE action_state='%s' and \
+		CAST(year as INTEGER) >= 2010 ORDER BY month_year DESC;" %(loc)
 
     print query
 
-    # query_results=pd.read_sql_query("SELECT * FROM central_results;",con)
     query_results=pd.read_sql_query(query,con)
     print query_results
 
@@ -107,7 +105,7 @@ def home_page_results():
 
     results_dict = []
     for i in ticks:
-        query = "SELECT year, actor_type, events_count, norm_scale FROM query_results WHERE actor_type ='"+i+"'"
+        query = "SELECT year, month_year, actor_type, events_count, norm_scale FROM query_results WHERE actor_type ='"+i+"'"
 
         results_tmp = ps.sqldf(query, locals())
         print results_tmp
@@ -115,10 +113,10 @@ def home_page_results():
         event_counts = results_tmp['events_count'].values
         norms_scale = results_tmp['norm_scale'].values
 
-        scores_avg = [j / i for i, j in zip(event_counts, norms_scale)]
+        scores_avg = [(j / i)*100 for i, j in zip(event_counts, norms_scale)]
         print 'Scores_avg ' + str(scores_avg)
 
-        years = map(int, list(results_tmp['year'].values))
+        years = map(int, list(results_tmp['month_year'].values))
         scores = map(float, scores_avg)
 
         try:
@@ -135,23 +133,11 @@ def home_page_results():
     graphs = [
             dict( #data,
                 data = [item for item in results_dict],
-                # data=[ datas[0],datas[1]
-                    # dict(
-                    #     x=years,
-                    #     y=scores,
-                    #     name='original',
-                    #     type='line'
-                    # ),
-                    # dict(
-                    #     x=[2005, 2007, 2012, 2018],
-                    #     y=[2.0, -2, 4, 1],
-                    #     name='test',
-                    #     type='line'
-                    # )
-                # ],
-                # layout=dict(
-                #     title='Result'
-                # )
+                layout=dict(
+                     title='Result',
+                     xaxis=dict(title='Years', type='category'),
+		     yaxis=dict(title='Impact score (%)') #, range=[0.0,1.0])
+		)
             )
     ]
 
