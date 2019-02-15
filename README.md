@@ -1,3 +1,4 @@
-# Analyst's Assistant
+# InfoCurrent
 
-Interactive cards on geopolitical and socioeconomic events happening in Nation States
+Showing the impact that actors have on states in the US
+
