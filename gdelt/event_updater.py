@@ -18,7 +18,7 @@ def get_df(con):
             FROM events
             WHERE Actor1Geo_CountryCode='US' and
                         Actor1Code != 'null' and
-                        sqldate >= 20190213 and
+                        sqldate >= 20190215 and
                         Actor1Type1Code in ('COP', 'GOV', 'JUD', 'BUS',
                                             'CRM', 'DEV', 'EDU', 'ENV',
                                             'HLH', 'LEG','MED','MNC');
@@ -85,6 +85,23 @@ def aggregate_data(df):
 
     print 'In aggregate data function'
 
+    # df = df.groupby(['action_state', 'year', 'actor1type1code'])
+    df = df.groupby(['action_state', 'year', 'actor1type1code']).count()
+    pprint(df)
+
+    df = df.sum()
+
+    return df
+
+
+def clean_df(df):
+
+    df = df.drop(['actor1code','actiongeo_fullname', 'actiongeo_adm1code',
+                    'actor1geo_countrycode'], axis=1)
+
+    pprint(df)
+
+    return df
 
 
 if __name__ == '__main__':
@@ -105,5 +122,7 @@ if __name__ == '__main__':
     df = get_df(con)
     df = get_states(df)
     df = normalize_goldstein(df)
+    df = clean_df(df)
+    df = aggregate_data(df)
 
     print 'Done'
