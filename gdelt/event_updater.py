@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 import psycopg2
 import pandasql as ps
 from pprint import pprint
+import re
 
 
 def get_df(con):
@@ -85,7 +86,7 @@ def clean_df(df):
     df = df.drop(['actor1code','actiongeo_fullname', 'actiongeo_adm1code',
                     'actor1geo_countrycode','sqldate','goldsteinscale'], axis=1)
 
-    pprint(df)
+    # pprint(df)
 
     return df
 
@@ -94,29 +95,74 @@ def aggregate_data(df):
 
     print 'In aggregate data function'
 
-    # df = df.groupby(['action_state', 'year', 'actor1type1code'], as_index=False).count()
-    df = df.groupby(['action_state', 'year', 'actor1type1code'], as_index=False).agg({
-        "globaleventid": ["count"],
-        "norm_scale": ["sum"]
-    }
-    )
+    df = df.groupby(['action_state', 'year', 'monthyear', 'actor1type1code'],
+        as_index=False).agg({
+            "globaleventid": ["count"],
+            "norm_scale": ["sum"]}).rename(columns={'globaleventid':'events_count',
+                            'norm_scale':'norm_scale_sum'})
+
+    pattern = re.compile("^[a-zA-Z]+$")
+    df = df.loc[df.action_state.str.contains(pattern)]
+
     pprint(df)
 
-    print df.shape
-
-    # df = df.sum()
+    df.columns = df.columns.droplevel(1)
+    print list(df)
 
     return df
 
 
-def split_columns(df):
+def get_table_data(df):
 
-    print 'In split columns functions'
+    print 'In get table data function'
 
+    pprint(df)
     print list(df)
-    print df.shape
-    tmp = df['action_state']
-    print tmp
+
+    unq_states = df.action_state.unique()
+    unq_years = df.year.unique()
+    unq_mnthyr = df.monthyear.unique()
+    unq_type = df.actor1type1code.unique()
+
+    print unq_states
+    print unq_years
+    print unq_mnthyr
+    print unq_type
+
+    return df
+
+
+def batch_update(df, con):
+
+    dict_df = df.to_dict(orient='records')
+    # pprint(dict_df)
+
+
+    cur = con.cursor()
+
+    try:
+        cur.executemany(
+            '''
+                UPDATE monthyr_central_results
+                SET
+                    events_count = events_count + %(events_count)s,
+                    norm_scale = norm_scale + %(norm_scale_sum)s
+                WHERE
+                    action_state = %(action_state)s AND
+                    month_year = %(monthyear)s AND
+                    actor_type = %(actor1type1code)s
+            ''',
+            dict_df
+        )
+
+        cur.close()
+        con.commit()
+
+    except(Exception, psycopg2.DatabaseError) as error:
+        print 'DB Error - ' + str(error)
+    finally:
+        if con is not None:
+            con.close()
 
     return df
 
@@ -140,6 +186,7 @@ if __name__ == '__main__':
     df = normalize_goldstein(df)
     df = clean_df(df)
     df = aggregate_data(df)
-    # df = split_columns(df)
+    # df = get_table_data(df)
+    df = batch_update(df, con)
 
     print 'Done'
