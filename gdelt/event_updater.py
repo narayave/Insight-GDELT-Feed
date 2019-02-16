@@ -18,7 +18,7 @@ def get_df(con):
             FROM events
             WHERE Actor1Geo_CountryCode='US' and
                         Actor1Code != 'null' and
-                        sqldate >= 20190215 and
+                        sqldate >= 20190216 and
                         Actor1Type1Code in ('COP', 'GOV', 'JUD', 'BUS',
                                             'CRM', 'DEV', 'EDU', 'ENV',
                                             'HLH', 'LEG','MED','MNC');
@@ -72,24 +72,10 @@ def normalize_goldstein(df):
     min_scale, max_scale = -10.000005, 10.000005
     norm_gold = df['goldsteinscale'].apply(lambda x: (x - min_scale)/(max_scale - min_scale))
 
-    print norm_gold
+    # print norm_gold
 
     df['norm_scale'] = norm_gold
-    pprint(df)
-
-    return df
-
-
-
-def aggregate_data(df):
-
-    print 'In aggregate data function'
-
-    # df = df.groupby(['action_state', 'year', 'actor1type1code'])
-    df = df.groupby(['action_state', 'year', 'actor1type1code']).count()
-    pprint(df)
-
-    df = df.sum()
+    # pprint(df)
 
     return df
 
@@ -97,12 +83,42 @@ def aggregate_data(df):
 def clean_df(df):
 
     df = df.drop(['actor1code','actiongeo_fullname', 'actiongeo_adm1code',
-                    'actor1geo_countrycode'], axis=1)
+                    'actor1geo_countrycode','sqldate','goldsteinscale'], axis=1)
 
     pprint(df)
 
     return df
 
+
+def aggregate_data(df):
+
+    print 'In aggregate data function'
+
+    # df = df.groupby(['action_state', 'year', 'actor1type1code'], as_index=False).count()
+    df = df.groupby(['action_state', 'year', 'actor1type1code'], as_index=False).agg({
+        "globaleventid": ["count"],
+        "norm_scale": ["sum"]
+    }
+    )
+    pprint(df)
+
+    print df.shape
+
+    # df = df.sum()
+
+    return df
+
+
+def split_columns(df):
+
+    print 'In split columns functions'
+
+    print list(df)
+    print df.shape
+    tmp = df['action_state']
+    print tmp
+
+    return df
 
 if __name__ == '__main__':
 
@@ -124,5 +140,6 @@ if __name__ == '__main__':
     df = normalize_goldstein(df)
     df = clean_df(df)
     df = aggregate_data(df)
+    # df = split_columns(df)
 
     print 'Done'
