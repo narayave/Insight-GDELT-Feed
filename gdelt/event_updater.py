@@ -1,12 +1,13 @@
-from six.moves import configparser
-import pandas as pd
-from sqlalchemy import create_engine
-import psycopg2
-import pandasql as ps
-from pprint import pprint
 import re
 
-from event_adder import Data_Gatherer
+from sqlalchemy import create_engine
+from six.moves import configparser
+import pandas as pd
+import pandasql as ps
+from pprint import pprint
+import psycopg2
+
+from data_gatherer import DataGatherer
 
 
 def initial_df_clean(dataframe):
@@ -150,7 +151,7 @@ if __name__ == '__main__':
 
     con = get_db_conn()
 
-    data_gather = Data_Gatherer()
+    data_gather = DataGatherer()
     data_gather.set_target_file()
     data_gather.download_zip()
     data_gather.unzip_download()
