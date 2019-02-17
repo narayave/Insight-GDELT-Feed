@@ -20,7 +20,7 @@ db_update_confirm = BashOperator(task_id='db_update_confirm',
                                 dag=dag)
 
 load_database = BashOperator(task_id='load_database',
-                                bash_command='python ~/Insight-GDELT-Feed/gdelt/new_event_collection.py',
+                                bash_command='python ~/Insight-GDELT-Feed/gdelt/event_updater.py',
                                 dag=dag)
 
 
