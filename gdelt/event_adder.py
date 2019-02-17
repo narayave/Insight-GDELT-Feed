@@ -8,6 +8,7 @@ from urllib import urlopen
 from zipfile import ZipFile
 import urllib
 import pandas as pd
+import os
 
 class Database_Operations(object):
 
@@ -22,6 +23,7 @@ class Database_Operations(object):
     """
         All commands should be sent to this function execute
     """
+
     def db_command(self, commands):
 
         conn = None
@@ -57,24 +59,68 @@ class Data_Gatherer(object):
         # Super important link, updated every 15 minutes
         self.target_url = "http://data.gdeltproject.org/gdeltv2/lastupdate.txt"
         self.target_file = None
-        self.primary_fields = ['GLOBALEVENTID', 'SQLDATE', 'MonthYear',
-            'Year', 'FractionDate', 'Actor1Code', 'Actor1Name',
-            'Actor1CountryCode', 'Actor1KnownGroupCode', 'Actor1EthnicCode',
-            'Actor1Religion1Code', 'Actor1Religion2Code', 'Actor1Type1Code',
-            'Actor1Type2Code', 'Actor1Type3Code', 'Actor2Code', 'Actor2Name',
-            'Actor2CountryCode', 'Actor2KnownGroupCode', 'Actor2EthnicCode',
-            'Actor2Religion1Code', 'Actor2Religion2Code', 'Actor2Type1Code',
-            'Actor2Type2Code', 'Actor2Type3Code', 'IsRootEvent', 'EventCode',
-            'EventBaseCode', 'EventRootCode', 'QuadClass', 'GoldsteinScale',
-            'NumMentions', 'NumSources', 'NumArticles', 'AvgTone',
-            'Actor1Geo_Type', 'Actor1Geo_FullName', 'Actor1Geo_CountryCode',
-            'Actor1Geo_ADM1Code', 'gap_1', 'Actor1Geo_Lat', 'Actor1Geo_Long',
-            'Actor1Geo_FeatureID', 'Actor2Geo_Type', 'Actor2Geo_FullName',
-            'Actor2Geo_CountryCode', 'gap_2', 'Actor2Geo_ADM1Code',
-            'Actor2Geo_Lat', 'Actor2Geo_Long', 'Actor2Geo_FeatureID',
-            'ActionGeo_Type', 'ActionGeo_FullName', 'ActionGeo_CountryCode',
-            'ActionGeo_ADM1Code', 'gap_3', 'ActionGeo_Lat', 'ActionGeo_Long',
-            'ActionGeo_FeatureID', 'DATEADDED', 'SOURCEURL']
+        self.primary_fields = [
+            'GLOBALEVENTID',
+            'SQLDATE',
+            'MonthYear',
+            'Year',
+            'FractionDate',
+            'Actor1Code',
+            'Actor1Name',
+            'Actor1CountryCode',
+            'Actor1KnownGroupCode',
+            'Actor1EthnicCode',
+            'Actor1Religion1Code',
+            'Actor1Religion2Code',
+            'Actor1Type1Code',
+            'Actor1Type2Code',
+            'Actor1Type3Code',
+            'Actor2Code',
+            'Actor2Name',
+            'Actor2CountryCode',
+            'Actor2KnownGroupCode',
+            'Actor2EthnicCode',
+            'Actor2Religion1Code',
+            'Actor2Religion2Code',
+            'Actor2Type1Code',
+            'Actor2Type2Code',
+            'Actor2Type3Code',
+            'IsRootEvent',
+            'EventCode',
+            'EventBaseCode',
+            'EventRootCode',
+            'QuadClass',
+            'GoldsteinScale',
+            'NumMentions',
+            'NumSources',
+            'NumArticles',
+            'AvgTone',
+            'Actor1Geo_Type',
+            'Actor1Geo_FullName',
+            'Actor1Geo_CountryCode',
+            'Actor1Geo_ADM1Code',
+            'gap_1',
+            'Actor1Geo_Lat',
+            'Actor1Geo_Long',
+            'Actor1Geo_FeatureID',
+            'Actor2Geo_Type',
+            'Actor2Geo_FullName',
+            'Actor2Geo_CountryCode',
+            'gap_2',
+            'Actor2Geo_ADM1Code',
+            'Actor2Geo_Lat',
+            'Actor2Geo_Long',
+            'Actor2Geo_FeatureID',
+            'ActionGeo_Type',
+            'ActionGeo_FullName',
+            'ActionGeo_CountryCode',
+            'ActionGeo_ADM1Code',
+            'gap_3',
+            'ActionGeo_Lat',
+            'ActionGeo_Long',
+            'ActionGeo_FeatureID',
+            'DATEADDED',
+            'SOURCEURL']
         self.target_file_url = None
 
     def set_target_file(self):
@@ -117,18 +163,22 @@ class Data_Gatherer(object):
             zip.extractall('/home/ubuntu/Insight-GDELT-Feed/gdelt/')
             print('Done!')
 
-
     def delete_recent_files(self):
 
         print 'Going to remove some files'
         os.remove('/home/ubuntu/Insight-GDELT-Feed/gdelt/' + self.target_file)
-        os.remove('/home/ubuntu/Insight-GDELT-Feed/gdelt/' + self.target_file + '.zip')
+        os.remove(
+            '/home/ubuntu/Insight-GDELT-Feed/gdelt/' +
+            self.target_file +
+            '.zip')
         print 'Removed those recent files'
-
 
     def load_gdelt_csv(self, data_ops_handler, target=None):
 
-        command = [ "COPY events FROM '/home/ubuntu/Insight-GDELT-Feed/gdelt/" + self.target_file + "' delimiter '\t' csv;" ]
+        command = [
+            "COPY events FROM '/home/ubuntu/Insight-GDELT-Feed/gdelt/" +
+            self.target_file +
+            "' delimiter '\t' csv;"]
         print command
 
         results = data_ops_handler.db_command(command)
@@ -136,8 +186,12 @@ class Data_Gatherer(object):
 
     def get_csv_dataframe(self):
 
-        dataframe = pd.read_csv("/home/ubuntu/Insight-GDELT-Feed/gdelt/" + self.target_file,
-                        sep='\t', header = None)
+        dataframe = pd.read_csv(
+            "/home/ubuntu/Insight-GDELT-Feed/gdelt/" +
+            self.target_file,
+            sep='\t',
+            header=None,
+            encoding='utf-8')
         dataframe.columns = self.primary_fields
 
         return dataframe
