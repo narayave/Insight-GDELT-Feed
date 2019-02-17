@@ -6,6 +6,7 @@ import pandasql as ps
 from pprint import pprint
 import re
 
+from event_adder import Data_Gatherer
 
 def get_df(con):
 
@@ -33,6 +34,30 @@ def get_df(con):
     # print dataframe
 
     return dataframe
+
+
+def initial_df_clean(dataframe):
+
+    print 'In the initial df clean function'
+
+    sql_query = """
+                SELECT GLOBALEVENTID, CAST(SQLDATE AS INTEGER),
+                MonthYear, Year, Actor1Code, Actor1Type1Code,
+                ActionGeo_FullName, ActionGeo_ADM1Code,
+                Actor1Geo_CountryCode, CAST(GoldsteinScale AS FLOAT)
+                FROM dataframe
+                WHERE Actor1Geo_CountryCode='US' and
+                Actor1Code != 'null' and
+                Actor1Type1Code in ('COP', 'GOV', 'JUD', 'BUS',
+                                    'CRM', 'DEV', 'EDU', 'ENV',
+                                    'HLH', 'LEG','MED','MNC');
+                """
+
+    df = ps.sqldf(sql_query, locals())
+
+    pprint(df)
+
+    return df
 
 
 def filter_dataframe(df):
@@ -172,11 +197,11 @@ def batch_update(df, con):
     return df
 
 
-if __name__ == '__main__':
+def get_db_conn():
 
     config = configparser.ConfigParser()
     # TODO: Make sure to read the correct config.ini file on AWS workers
-    config.read('/home/vee/repos/Insight-GDELT-Feed/gdelt/config.ini')
+    config.read('/home/ubuntu/Insight-GDELT-Feed/gdelt/config.ini')
     dbname = config.get('dbauth', 'dbname')
     dbuser = config.get('dbauth', 'user')
     dbpass = config.get('dbauth', 'password')
@@ -186,17 +211,31 @@ if __name__ == '__main__':
     db = create_engine('postgres://%s%s/%s' % (dbuser, dbhost, dbname))
     con = None
     con = psycopg2.connect(
-        database=dbname,
-        host=dbhost,
-        user=dbuser,
-        password=dbpass)
+               database=dbname,
+               host=dbhost,
+               user=dbuser,
+               password=dbpass)
 
-    df = get_df(con)
+    return con
+
+
+if __name__ == '__main__':
+
+    con = get_db_conn()
+
+    #df = get_df(con)
+
+    data_gather = Data_Gatherer()
+    data_gather.set_target_file()
+    data_gather.download_zip()
+    data_gather.unzip_download()
+    df = data_gather.get_csv_dataframe()
+
+    df = initial_df_clean(df)
     df = get_states(df)
     df = normalize_goldstein(df)
     df = clean_df(df)
     df = aggregate_data(df)
-    # df = get_table_data(df)
-    df = batch_update(df, con)
+    #df = batch_update(df, con)
 
     print 'Done'

@@ -7,7 +7,7 @@ from pprint import pprint
 from urllib import urlopen
 from zipfile import ZipFile
 import urllib
-
+import pandas as pd
 
 class Database_Operations(object):
 
@@ -22,7 +22,6 @@ class Database_Operations(object):
     """
         All commands should be sent to this function execute
     """
-
     def db_command(self, commands):
 
         conn = None
@@ -135,25 +134,13 @@ class Data_Gatherer(object):
         results = data_ops_handler.db_command(command)
         print results
 
+    def get_csv_dataframe(self):
 
-    def transfer_data(self):
+        dataframe = pd.read_csv("/home/ubuntu/Insight-GDELT-Feed/gdelt/" + self.target_file,
+                        sep='\t', header = None)
+        dataframe.columns = self.primary_fields
 
-        command = ["""
-                    INSERT INTO gdelt_events (
-                        globaleventid, sqldate, actor1code, actor1name,
-                        actor1geo_fullname, actor1geo_countrycode, actor2code,
-                        actor2name, actor2geo_fullname, actor2geo_countrycode,
-                        goldsteinscale, avgtone, nummentions, eventcode,
-                        sourceurl)
-                    SELECT globaleventid, sqldate, actor1code, actor1name,
-                        actor1geo_fullname, actor1geo_countrycode, actor2code,
-                        actor2name, actor2geo_fullname, actor2geo_countrycode,
-                        goldsteinscale, avgtone, nummentions, eventcode, sourceurl
-                    FROM events
-            """]
-
-        results = data_ops_handler.db_command(command)
-        print results
+        return dataframe
 
 
 if __name__ == '__main__':
