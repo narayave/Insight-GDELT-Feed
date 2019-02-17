@@ -1,8 +1,0 @@
-tmux ls                             shows current sessions
-tmux new-session -s sessname        creates a new session
-tmux a -t <session>                 connects to a session
-cntrl+b o                           switches between panes
-cntrl+b "                           splits the panes
-cntrl+b d                           disconnects from tmux session
-
-
