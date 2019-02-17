@@ -13,7 +13,7 @@ import plotly
 import pandasql as ps
 
 config = configparser.ConfigParser()
-# TODO: Make sure to read the correct config.ini file on AWS workers
+# NOTE: Make sure to read the correct config.ini file on AWS workers
 config.read('/home/ubuntu/Insight-GDELT-Feed/flask/flaskexample/config.ini')
 dbname = config.get('dbauth', 'dbname')
 dbuser = config.get('dbauth', 'user')
@@ -33,40 +33,6 @@ def index():
        )
 
 
-@app.route('/db')
-def events_page():
-    sql_query = """
-                SELECT * FROM events;
-                """
-
-    query_results = pd.read_sql_query(sql_query,con)
-    events = ""
-    for i in range(0,10):
-        events += (query_results.iloc[i]['actor1geo_fullname'])
-        events += "<br>"
-    return events
-
-
-@app.route('/db_fancy')
-def events_page_fancy():
-    sql_query = """
-               SELECT * FROM events;
-
-                """
-    query_results=pd.read_sql_query(sql_query,con)
-
-    items = []
-
-    for i in range(0,query_results.shape[0]):
-        items.append(dict(globaleventid=query_results.iloc[i]['globaleventid'], \
-            sqldate=query_results.iloc[i]['sqldate'], \
-            actor1geo_fullname=query_results.iloc[i]['actor1geo_fullname'], \
-            actor1name=query_results.iloc[i]['actor1name']))
-            #, source_url=query_results.iloc[i]['source_url']))
-            # item['actor1geo_fullname']}}</td><td>{{item['actor1name']}}</td><td>{{item['source_url']}}
-    return render_template('test_page.html',items=items)
-
-
 @app.route('/results')
 def home_page_results():
 
@@ -82,26 +48,18 @@ def home_page_results():
 
     if len(checks) == 1:
         query = "SELECT * FROM monthyr_central_results WHERE action_state='%s' and \
-                    actor_type = '%s' and CAST(year AS INTEGER) >= 2010 ORDER BY month_year DESC;" %(loc, checks[0])
+                    actor_type = '%s' and CAST(year AS INTEGER) >= 2010 ORDER BY month_year;" %(loc, checks[0])
     elif len(checks) > 1:
         query = "SELECT * FROM monthyr_central_results WHERE action_state='%s' and \
-            actor_type IN %s and CAST(year as INTEGER) >= 2006 ORDER BY month_year;" %(loc, tuple(checks))
+            actor_type IN %s and CAST(year as INTEGER) >= 2013 ORDER BY month_year;" %(loc, tuple(checks))
     elif checks == []:
         query = "SELECT * FROM monthyr_central_results WHERE action_state='%s' and \
-		CAST(year as INTEGER) >= 2010 ORDER BY month_year DESC;" %(loc)
+		CAST(year as INTEGER) >= 2013 ORDER BY month_year DESC;" %(loc)
 
     print query
 
     query_results=pd.read_sql_query(query,con)
     print query_results
-
-    # for i in range(0,query_results.shape[0]):
-    #     items.append (dict(state=query_results.iloc[i]['action_state'], \
-    #                     year=query_results.iloc[i]['year'], \
-    #                     actortype=query_results.iloc[i]['actor_type'], \
-    #                     count=query_results.iloc[i]['event_count'], \
-    #                     goldsteinscale=query_results.iloc[i]['goldstein_scale'], \
-    #                     avgtone=query_results.iloc[i]['avg_tone']))
 
     results_dict = []
     for i in ticks:
