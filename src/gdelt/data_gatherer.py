@@ -77,6 +77,11 @@ class DataGatherer(object):
         self.target_file_url = None
 
     def set_target_file(self):
+        '''
+            This function reads the target_url to find target file. It sets
+            the local variables for the target file, and the location for
+            where it can be found.
+        '''
 
         target_file_link = None
 
@@ -97,6 +102,10 @@ class DataGatherer(object):
         self.target_file = target_filename
 
     def download_zip(self):
+        '''
+            This function's primary purpose is to download the target file.
+        '''
+
         print 'Going to download latest GDELT update file'
         urlretrieve(
             self.target_file_url,
@@ -105,6 +114,10 @@ class DataGatherer(object):
             ".zip")
 
     def unzip_download(self):
+        '''
+            This function unzips the targets file that was previously
+            downloaded.
+        '''
         filename = '/home/ubuntu/Insight-GDELT-Feed/src/gdelt/' + \
             self.target_file + '.zip'
         print 'To unzip - ' + filename
@@ -115,17 +128,12 @@ class DataGatherer(object):
             zip.extractall('/home/ubuntu/Insight-GDELT-Feed/src/gdelt/')
             print('Done!')
 
-    def delete_recent_files(self):
-
-        print 'Going to remove some files'
-        os.remove('/home/ubuntu/Insight-GDELT-Feed/src/gdelt/' + self.target_file)
-        os.remove(
-            '/home/ubuntu/Insight-GDELT-Feed/src/gdelt/' +
-            self.target_file +
-            '.zip')
-        print 'Removed those recent files'
-
     def get_csv_dataframe(self):
+        '''
+            Using pandas, the csv that was unzipped is loaded as a pandas
+            dataframe. The columns are attached. The dataframe is then
+            returned for use.
+        '''
 
         dataframe = pd.read_csv(
             "/home/ubuntu/Insight-GDELT-Feed/src/gdelt/" +
@@ -136,3 +144,18 @@ class DataGatherer(object):
         dataframe.columns = self.primary_fields
 
         return dataframe
+
+    def delete_recent_files(self):
+        '''
+            When called, this function helps delete the csv and the zipped
+            file that was it was originally contained in.
+        '''
+
+        print 'Going to remove some files'
+        os.remove('/home/ubuntu/Insight-GDELT-Feed/src/gdelt/' +
+                  self.target_file)
+        os.remove(
+            '/home/ubuntu/Insight-GDELT-Feed/src/gdelt/' +
+            self.target_file +
+            '.zip')
+        print 'Removed those recent files'
