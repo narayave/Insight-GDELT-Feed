@@ -14,10 +14,9 @@ import gdelt_schema_v1
 import gdelt_schema_v2
 from six.moves import configparser
 
-
 def postgres_dump(config, data_frame):
 
-    config.read('/home/ubuntu/Insight-GDELT-Feed/spark/config.ini')
+    config.read('/home/ubuntu/Insight-GDELT-Feed/test/spark/config.ini')
     dbname = config.get('dbauth', 'dbname')
     dbuser = config.get('dbauth', 'user')
     dbpass = config.get('dbauth', 'password')
@@ -26,14 +25,14 @@ def postgres_dump(config, data_frame):
 
     url = "jdbc:postgresql://"+dbhost+":"+dbport+"/"+dbname
     properties = {
-        "driver": "org.postgresql.Driver",
-        "user": dbuser,
-        "password": dbpass
-    }
+                "driver": "org.postgresql.Driver",
+                "user": dbuser,
+                "password": dbpass
+                }
 
     mode = 'append'
-    data_frame.write.jdbc(url=url, table="central_results", mode=mode,
-                          properties=properties)
+    data_frame.write.jdbc(url=url, table="central_results", mode=mode, \
+                properties=properties)
 
 
 def get_clean_df(sqlcontext, sql_df):
@@ -53,23 +52,22 @@ def get_clean_df(sqlcontext, sql_df):
                         from temp
                         """)
 
-    df_select = df_clean.select('GLOBALEVENTID', 'SQLDATE', 'Year', 'Actor1Code',
-                                'Actor1Type1Code', 'ActionGeo_FullName',
+    df_select = df_clean.select('GLOBALEVENTID','SQLDATE','Year','Actor1Code',
+                                'Actor1Type1Code','ActionGeo_FullName',
                                 'ActionGeo_CountryCode', 'ActionGeo_ADM1Code',
-                                'Actor1Geo_CountryCode', 'GoldsteinScale')
+                                'Actor1Geo_CountryCode','GoldsteinScale')
 
     return df_select
 
 
 def filter_df(df_news):
-    role_codes_of_interest = ["COP", "GOV", "JUD", "BUS", "CRM", "DEV", "EDU", "ENV"
-                              "HLH", "LEG", "MED", "MNC"]
+    role_codes_of_interest = ["COP", "GOV", "JUD", "BUS", "CRM", "DEV", "EDU", "ENV" \
+                                "HLH", "LEG", "MED", "MNC"]
 
     # Filter data records that are of interest
     df_news = df_news.filter(df_news.ActionGeo_CountryCode == 'US')
     df_news = df_news.filter(df_news.Actor1Code != 'null')
-    df_news = df_news.filter(
-        df_news.Actor1Type1Code.isin(role_codes_of_interest))
+    df_news = df_news.filter(df_news.Actor1Type1Code.isin(role_codes_of_interest))
 
     df_news.show()
 
@@ -81,9 +79,9 @@ def filter_df(df_news):
     #   So, parse out the state and make it a new column
     name = 'ActionGeo_ADM1Code'
     udf = UserDefinedFunction(lambda x: x[:2]+'-'+x[2:], StringType())
-    df_news = df_news.select(*[udf(column).alias(name) if column == name else
-                               column for column in df_news.columns])
-    split_col = F.split(df_news['ActionGeo_ADM1Code'], '-')
+    df_news = df_news.select(*[udf(column).alias(name) if column == name else \
+                                column for column in df_news.columns])
+    split_col = F.split(df_news['ActionGeo_ADM1Code'],'-')
     df_news = df_news.withColumn('action_state', split_col.getItem(1))
 
     # The GoldsteinScale's range is between -10 and 10, but it's mostly sparse
@@ -92,11 +90,10 @@ def filter_df(df_news):
     #   Higher value denotes a more positive outcome
     name = 'GoldsteinScale'
     min_scale, max_scale = -10.0, 10.0
-    norm = UserDefinedFunction(lambda x: (
-        x - min_scale)/(max_scale - min_scale), DoubleType())
-    df_news = df_news.select(*[norm(col).cast(DoubleType())
-                               .alias('normg_scale') if col == name else col for col in
-                               df_news.columns])
+    norm = UserDefinedFunction(lambda x: (x - min_scale)/(max_scale - min_scale), DoubleType())
+    df_news = df_news.select(*[norm(col).cast(DoubleType()) \
+                .alias('normg_scale') if col == name else col for col in \
+                    df_news.columns])
 
     df_news = df_news.filter(df_news.action_state != '')
 
@@ -104,24 +101,21 @@ def filter_df(df_news):
 
     return df_news
 
-
 def aggregate_job(df_news):
 
-    df_finalized = df_news.groupby('action_state', 'Year', 'Actor1Type1Code') \
-        .agg(
-        F.approx_count_distinct(
-            'GLOBALEVENTID').alias('events_count'),
-        F.sum('normg_scale').alias('norm_score_cale'))
-    # Calculate avg by dividing by event count
+    df_finalized = df_news.groupby('action_state','Year','Actor1Type1Code') \
+                    .agg( \
+                        F.approx_count_distinct('GLOBALEVENTID').alias('events_count'),
+                        F.sum('normg_scale').alias('norm_score_cale'))
+                        #Calculate avg by dividing by event count
 
     print df_finalized.show(df_finalized.count())
     #print df_finalized.printSchema()
 
-    # if not 'Actor1Type1Code' in df_finalized.columns:
+    #if not 'Actor1Type1Code' in df_finalized.columns:
     #   df = df.withColumn('Actor1Type1Code', f.lit(''))
 
     return df_finalized
-
 
 if __name__ == "__main__":
 
@@ -135,8 +129,6 @@ if __name__ == "__main__":
 
     sqlcontext = SQLContext(sc)
 
-    #gdelt_bucket1 = "s3n://gdelt-open-data/events/[1,2][0-9]*[0-9][0-3|9].csv"
-    #gdelt_bucket2 = "s3n://gdelt-open-data/events/*.export.csv"
     gdelt_bucket1 = "s3n://gdelt-open-data/events/200806.csv"
     gdelt_bucket2 = "s3n://gdelt-open-data/events/20150329.export.csv"
 
@@ -146,13 +138,14 @@ if __name__ == "__main__":
         .format('com.databricks.spark.csv') \
         .options(header='false') \
         .options(delimiter="\t") \
-        .load(gdelt_bucket1, schema=gdelt_schema_v1.gdeltSchema)
+        .load(gdelt_bucket1, schema = gdelt_schema_v1.gdeltSchema)
 
     df_2 = sqlcontext.read \
         .format('com.databricks.spark.csv') \
         .options(header='false') \
         .options(delimiter="\t") \
-        .load(gdelt_bucket2, schema=gdelt_schema_v2.gdeltSchema)
+        .load(gdelt_bucket2, schema = gdelt_schema_v2.gdeltSchema)
+
 
     # Put together 2 sets of data with different schemas
     df_v1 = get_clean_df(sqlcontext, df_1)

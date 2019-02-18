@@ -129,7 +129,7 @@ def get_db_conn():
 
     config = configparser.ConfigParser()
     # TODO: Make sure to read the correct config.ini file on AWS workers
-    config.read('/home/ubuntu/Insight-GDELT-Feed/gdelt/config.ini')
+    config.read('/home/ubuntu/Insight-GDELT-Feed/src/gdelt/config.ini')
     dbname = config.get('dbauth', 'dbname')
     dbuser = config.get('dbauth', 'user')
     dbpass = config.get('dbauth', 'password')

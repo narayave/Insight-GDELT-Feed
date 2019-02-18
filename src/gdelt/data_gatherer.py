@@ -1,60 +1,12 @@
-import psycopg2
-import urllib2
-from six.moves import configparser
-from smart_open import smart_open
-from pprint import pprint
-
-from urllib import urlopen
-from zipfile import ZipFile
-import urllib
-import pandas as pd
 import os
+from urllib import urlopen
+from urllib import urlretrieve
+from zipfile import ZipFile
+
+import pandas as pd
 
 
-class Database_Operations(object):
-
-    def __init__(self, config):
-        config.read('/home/ubuntu/Insight-GDELT-Feed/gdelt/config.ini')
-        self.__db_name = config.get('dbauth', 'dbname')
-        self.__db_user = config.get('dbauth', 'user')
-        self.__db_pass = config.get('dbauth', 'password')
-        self.__db_host = config.get('dbauth', 'host')
-        self.__db_port = config.get('dbauth', 'port')
-
-    """
-        All commands should be sent to this function execute
-    """
-
-    def db_command(self, commands):
-
-        conn = None
-        try:
-            # connect to postgresql server
-            conn = psycopg2.connect("dbname=" + self.__db_name +
-                                    " host=" + self.__db_host +
-                                    " port= " + self.__db_port +
-                                    " user=" + self.__db_user +
-                                    " password=" + self.__db_pass)
-            cur = conn.cursor()
-
-            # to get results for each operation
-            results = []
-
-            # execute each command
-            for comm in commands:
-                cur.execute(comm)
-            # results.append(cur.fetchall())
-            cur.close()
-            conn.commit()
-        except(Exception, psycopg2.DatabaseError) as error:
-            print 'DB Error - ' + str(error)
-        finally:
-            if conn is not None:
-                conn.close()
-                return results
-
-
-class Data_Gatherer(object):
+class DataGatherer(object):
 
     def __init__(self):
         # Super important link, updated every 15 minutes
@@ -146,50 +98,37 @@ class Data_Gatherer(object):
 
     def download_zip(self):
         print 'Going to download latest GDELT update file'
-        # urllib.request.urlretrieve(self.target_file_url,
-        # "/home/ubuntu/Insight-GDELT-Feed/gdelt/")
-        urllib.urlretrieve(
+        urlretrieve(
             self.target_file_url,
-            "/home/ubuntu/Insight-GDELT-Feed/gdelt/" +
+            "/home/ubuntu/Insight-GDELT-Feed/src/gdelt/" +
             self.target_file +
             ".zip")
 
     def unzip_download(self):
-        filename = '/home/ubuntu/Insight-GDELT-Feed/gdelt/' + \
+        filename = '/home/ubuntu/Insight-GDELT-Feed/src/gdelt/' + \
             self.target_file + '.zip'
         print 'To unzip - ' + filename
 
         with ZipFile(filename, 'r') as zip:
             # extracting all the files
             print('Extracting all the files now...')
-            zip.extractall('/home/ubuntu/Insight-GDELT-Feed/gdelt/')
+            zip.extractall('/home/ubuntu/Insight-GDELT-Feed/src/gdelt/')
             print('Done!')
 
     def delete_recent_files(self):
 
         print 'Going to remove some files'
-        os.remove('/home/ubuntu/Insight-GDELT-Feed/gdelt/' + self.target_file)
+        os.remove('/home/ubuntu/Insight-GDELT-Feed/src/gdelt/' + self.target_file)
         os.remove(
-            '/home/ubuntu/Insight-GDELT-Feed/gdelt/' +
+            '/home/ubuntu/Insight-GDELT-Feed/src/gdelt/' +
             self.target_file +
             '.zip')
         print 'Removed those recent files'
 
-    def load_gdelt_csv(self, data_ops_handler, target=None):
-
-        command = [
-            "COPY events FROM '/home/ubuntu/Insight-GDELT-Feed/gdelt/" +
-            self.target_file +
-            "' delimiter '\t' csv;"]
-        print command
-
-        results = data_ops_handler.db_command(command)
-        print results
-
     def get_csv_dataframe(self):
 
         dataframe = pd.read_csv(
-            "/home/ubuntu/Insight-GDELT-Feed/gdelt/" +
+            "/home/ubuntu/Insight-GDELT-Feed/src/gdelt/" +
             self.target_file,
             sep='\t',
             header=None,
@@ -197,19 +136,3 @@ class Data_Gatherer(object):
         dataframe.columns = self.primary_fields
 
         return dataframe
-
-
-if __name__ == '__main__':
-
-    config = configparser.ConfigParser()
-    db_ops = Database_Operations(config)
-    data_gather = Data_Gatherer()
-
-    data_gather.set_target_file()
-    data_gather.download_zip()
-    data_gather.unzip_download()
-
-    data_gather.load_gdelt_csv(db_ops)
-    data_gather.delete_recent_files()
-
-    print 'Done'
