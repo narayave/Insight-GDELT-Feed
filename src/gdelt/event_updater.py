@@ -96,6 +96,8 @@ def batch_update(df, con):
 
     dict_df = df.to_dict(orient='records')
 
+    pprint(dict_df)
+
     cur = con.cursor()
 
     try:
