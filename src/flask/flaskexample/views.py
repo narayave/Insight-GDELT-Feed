@@ -44,10 +44,11 @@ def home_page_results():
     all_actor_roles = ["COP", "GOV", "JUD", "BUS", "CRM", "DEV", "EDU", "ENV",
                        "HLH", "LEG", "MED", "MNC"]
 
-    loc = request.args.get('location')
+    loc = request.args.get('location').upper()
     checks = request.args.getlist('check_list[]')
     checks = [i.encode('utf-8') for i in checks]
     ticks = checks
+    print loc
     print checks
 
     if len(checks) == 1:
@@ -87,13 +88,14 @@ def home_page_results():
         scores = map(float, scores_avg)
 
         # Add logic to check last 2 months
-        last_month = scores[-2]
-        this_month = scores[-1]
-        verdict = 1 if this_month >= last_month else 0
-        overall_result.append(
-            dict(actor=results_tmp['actor_type'][0], verdict=verdict)
-        )
-        print last_month, this_month, verdict
+	if len(scores_avg) != 0 and len(scores_avg) > 2:
+		last_month = scores[-2]
+		this_month = scores[-1]
+		verdict = 1 if this_month >= last_month else 0
+		overall_result.append(
+			dict(actor=results_tmp['actor_type'][0], verdict=verdict)
+		)
+		print last_month, this_month, verdict
 
         try:
             # for item in query
