@@ -37,7 +37,7 @@
 	<nav class="navbar navbar-inverse navbar-fixed-top">
 		<div class="container">
 			<div class="navbar-header">
-				<a class="navbar-brand" href="#">Home</a>
+				<a class="navbar-brand" href="/index">Home</a>
 			</div>
 		</div>
 	</nav>
@@ -71,19 +71,39 @@
 		</div-->
 		<!-- .container-->
 
-		<div class="container">
+		<!-- <div class="container">
 			<div class="container">
-				<form action="/index" method="GET">
+				<form action="/input" method="GET">
 					<div>
-						<!-- <button type="submit" class="btn btn-default btn-lg">Submit</button> -->
 						<button type="reset" class="btn btn-default btn-lg">Reset</button>
 					</div>
 				</form>
 			</div>
 			<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
 			<script src="../static/js/bootstrap.min.js"></script>
-		</div> <!-- /.container-->
+		</div> -->
+		<!-- /.container-->
 
+		<div class="container">
+
+			<h3>Changes over last month:</h3>
+
+			{% for res in overall%}
+			<tr>
+				<td>{{ res['actor'] }}</td>
+				<td>
+					{% if res['verdict'] == 1 %}
+					<img src="../static/up.png" alt="Up" height="42" width="42">
+					{% else %}
+					<img src="../static/down.png" alt="Down" height="42" width="42">
+					{% endif %}
+				</td>
+			</tr>
+			{% endfor %}
+
+		</div>
+
+		<br><br>
 
 		<div class="container">
 			<!-- <div class="starter-template"> -->

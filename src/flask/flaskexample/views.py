@@ -69,6 +69,7 @@ def home_page_results():
     print query_results
 
     results_dict = []
+    overall_result = []
     for i in ticks:
         query = "SELECT year, month_year, actor_type, events_count, norm_scale \
                     FROM query_results WHERE actor_type ='"+i+"'"
@@ -84,6 +85,15 @@ def home_page_results():
 
         years = map(int, list(results_tmp['month_year'].values))
         scores = map(float, scores_avg)
+
+        # Add logic to check last 2 months
+        last_month = scores[-2]
+        this_month = scores[-1]
+        verdict = 1 if this_month >= last_month else 0
+        overall_result.append(
+            dict(actor=results_tmp['actor_type'][0], verdict=verdict)
+        )
+        print last_month, this_month, verdict
 
         try:
             # for item in query
@@ -119,7 +129,8 @@ def home_page_results():
 
     print graphJSON
 
-    return render_template("results.html", ids=ids, graphJSON=graphJSON)
+    return render_template("results.html", ids=ids, graphJSON=graphJSON,
+                           overall=overall_result)
 
 
 @app.route('/output')
