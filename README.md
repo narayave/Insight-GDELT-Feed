@@ -83,10 +83,11 @@ Things are need to be installed and running
 - PostgreSQL Database
 - Flask
 - Airflow
-
----
-
-### Usage
+- Python
+- sqlalchemy
+- pandas
+- psycopg2
+- pandasql
 
 ---
 
