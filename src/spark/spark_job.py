@@ -17,7 +17,7 @@ class SparkJob(object):
             .appName("GDELT-News") \
             .config("spark.executor.memory", "5gb") \
             .config("spark.jars",
-                    "/home/ubuntu/Insight-GDELT-Feed/src/spark/postgresql-42.2.5.jar") \
+                    "/home/ubuntu/test-Insight/src/spark/postgresql-42.2.5.jar") \
             .getOrCreate()
 
         self.sqlcontext = SQLContext(self.__session)
