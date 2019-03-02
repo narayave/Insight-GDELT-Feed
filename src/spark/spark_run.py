@@ -20,24 +20,25 @@ if __name__ == "__main__":
     df_1 = sparkjob.get_clean_df(df_1)
     df_2 = sparkjob.get_clean_df(df_2)
     df_news = sparkjob.combine_dataframes(df_1, df_2)
-    df_news.show()
+    #df_news.show()
 
     # Filter
     df_news = sparkjob.filter_df(df_news)
 
     # Parse and add state column
-    df_news = sparkjob.add_state(df_news)
+    df_news = sparkjob.add_state_column(df_news)
 
     # Normalize goldstein scale
     df_news = sparkjob.normalize_goldstein(df_news)
+    print df_news.count()
 
     # Aggregate work
-    finalized_df = aggregate_job(df_news)
+    finalized_df = sparkjob.aggregate_job(df_news)
 
     finalized_df.printSchema()
 
     # Write to database
-    dataops.set_table_name("monthyr_central_results")
+    dataops.set_table_name("central_results")
     dataops.db_write(finalized_df)
 
     print 'Done'

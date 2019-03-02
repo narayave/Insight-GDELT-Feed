@@ -4,9 +4,9 @@ from six.moves import configparser
 class DatabaseOperations(object):
 
     def __init__(self):
-        config.read('/home/ubuntu/Insight-GDELT-Feed/src/spark/config.ini')
+        config = configparser.ConfigParser()
+        config.read('/home/ubuntu/test-Insight/src/spark/config.ini')
         self.__db_name = config.get('dbauth', 'dbname')
-        self.__db_user = config.get('dbauth', 'dbname')
         self.__db_user = config.get('dbauth', 'user')
         self.__db_pass = config.get('dbauth', 'password')
         self.__db_host = config.get('dbauth', 'host')
@@ -16,11 +16,11 @@ class DatabaseOperations(object):
 
         self.__write_mode = 'append'
         self.__url = "jdbc:postgresql://" + \
-            dbhost + \
+            self.__db_host + \
             ":" + \
-            dbport + \
+            self.__db_port + \
             "/" + \
-            dbname
+            self.__db_name
 
         self.__properties = {
             "driver": "org.postgresql.Driver",
@@ -40,7 +40,7 @@ class DatabaseOperations(object):
             This function takes in a dataframe and appends it to the table
         '''
 
-        dataframe.write
+        dataframe.write \
         .jdbc(url=self.__url,
               table=self.__table_name,
               mode=self.__write_mode,

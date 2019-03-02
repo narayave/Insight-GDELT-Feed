@@ -17,7 +17,7 @@ class SparkJob(object):
             .appName("GDELT-News") \
             .config("spark.executor.memory", "5gb") \
             .config("spark.jars",
-                    "/home/ubuntu/Insight-GDELT-Feed/src/spark/postgresql-42.2.5.jar") \
+                    "/home/ubuntu/test-Insight/src/spark/postgresql-42.2.5.jar") \
             .getOrCreate()
 
         self.sqlcontext = SQLContext(self.__session)
@@ -39,9 +39,8 @@ class SparkJob(object):
         self.sqlcontext.registerDataFrameAsTable(df, 'temp')
 
         # export PYTHONIOENCODING=utf8 <- ran that for utf8 decode error
-
-        df_clean = sqlcontext.sql("""SELECT GLOBALEVENTID,
-                            CAST(SQLDATE AS INTEGER), MonthYear,
+        df_clean = self.sqlcontext.sql("""SELECT GLOBALEVENTID,
+                            CAST(SQLDATE AS INTEGER), CAST(MonthYear AS INTEGER),
                             Year, EventCode, Actor1Code, Actor1Name,
                             Actor1Type1Code, ActionGeo_FullName,
                             ActionGeo_CountryCode, Actor1Geo_CountryCode,
@@ -51,7 +50,7 @@ class SparkJob(object):
                             from temp
                             """)
 
-        df_select = df_clean.select('GLOBALEVENTID', 'SQLDATE', 'Year',
+        df_select = df_clean.select('GLOBALEVENTID', 'SQLDATE', 'MonthYear', 'Year',
                                     'Actor1Code', 'Actor1Type1Code',
                                     'ActionGeo_FullName',
                                     'ActionGeo_CountryCode',
@@ -102,24 +101,30 @@ class SparkJob(object):
         # Higher value denotes a more positive outcome
         name = 'GoldsteinScale'
         min_scale, max_scale = -10.0, 10.0
-        norm = UserDefinedFunction(lambda x: (
-            x - min_scale)/(max_scale - min_scale), DoubleType())
+        df_news = df_news.filter(df_news.GoldsteinScale > -20.0)
+
+        norm = UserDefinedFunction(lambda x: (x - min_scale)/(max_scale - min_scale), DoubleType())
         df_news = df_news.select(*[norm(col).cast(DoubleType())
                                    .alias('normg_scale') if col == name else col for col in
                                    df_news.columns])
 
         df_news = df_news.filter(df_news.action_state != '')
 
+        return df_news
+
     def aggregate_job(self, df_news):
 
-        df_finalized = df_news.groupby('action_state', 'Year', 'Actor1Type1Code') \
+        #print df_news.count()
+        #df_news.show(df_news.count())
+
+        df_finalized = df_news.groupby('action_state', 'Year', 'MonthYear', 'Actor1Type1Code') \
             .agg(
             F.approx_count_distinct(
                 'GLOBALEVENTID').alias('events_count'),
             F.sum('normg_scale').alias('norm_score_cale'))
         # Calculate avg by dividing by event count
 
-        print df_finalized.show(df_finalized.count())
-        #print df_finalized.printSchema()
+        #print df_finalized.show(df_finalized.count())
+        print df_finalized.printSchema()
 
         return df_finalized
